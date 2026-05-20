@@ -20,11 +20,11 @@ export function TripCard({ trip, index = 0 }: TripCardProps) {
 
   return (
     <div
-      className="group bg-card rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300 border border-border"
+      className="group bg-card rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300 border border-border flex flex-col h-full"
       style={{ animationDelay: `${index * 100}ms` }}
     >
       {/* Image */}
-      <div className="relative h-52 overflow-hidden">
+      <div className="relative h-52 flex-shrink-0 overflow-hidden">
         <Image
           src={trip.image}
           alt={trip.title}
@@ -32,7 +32,7 @@ export function TripCard({ trip, index = 0 }: TripCardProps) {
           className="object-cover group-hover:scale-110 transition-transform duration-500"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 to-transparent" />
-        
+
         {/* Badges */}
         <div className="absolute top-4 left-4 flex items-center gap-2">
           <Badge className="bg-primary text-primary-foreground border-0">
@@ -52,43 +52,48 @@ export function TripCard({ trip, index = 0 }: TripCardProps) {
         </div>
       </div>
 
-      {/* Content */}
-      <div className="p-5 space-y-4">
-        <h3 className="font-serif font-semibold text-lg text-card-foreground line-clamp-2 leading-snug">
-          {trip.title}
-        </h3>
-
-        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-          <div className="flex items-center gap-1">
-            <Clock className="w-4 h-4 text-primary" />
-            <span>{trip.duration}</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <Users className="w-4 h-4 text-primary" />
-            <span>{trip.availableSlots}/{trip.totalSlots}</span>
-          </div>
+      {/* Content Wrapper */}
+      <div className="p-5 flex flex-col flex-grow justify-between">
+        <div>
+          <h3 className="font-serif font-semibold text-lg text-card-foreground line-clamp-2 leading-snug">
+            {trip.title}
+          </h3>
         </div>
 
-        {/* Price */}
-        <div className="flex items-end gap-2">
-          <span className="font-mono text-2xl font-bold text-primary">
-            {formatPrice(trip.price)}
-          </span>
-          {trip.originalPrice && (
-            <span className="text-sm text-muted-foreground line-through">
-              {formatPrice(trip.originalPrice)}
+        <div className="mt-6 space-y-4">
+          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+            <div className="flex items-center gap-1">
+              <Clock className="w-4 h-4 text-primary" />
+              <span>{trip.duration}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <Users className="w-4 h-4 text-primary" />
+              <span>{trip.availableSlots}/{trip.totalSlots}</span>
+            </div>
+          </div>
+
+          {/* Price */}
+          <div className="flex items-end gap-2">
+            <span className="font-mono text-2xl font-bold text-primary">
+              {formatPrice(trip.price)}
             </span>
-          )}
-          <span className="text-sm text-muted-foreground">/pax</span>
+            {trip.originalPrice && (
+              <span className="text-sm text-muted-foreground line-through">
+                {formatPrice(trip.originalPrice)}
+              </span>
+            )}
+            <span className="text-sm text-muted-foreground">/pax</span>
+          </div>
+
+          {/* CTA */}
+          <Button
+            asChild
+            className="w-full bg-primary hover:bg-primary-dark text-primary-foreground rounded-full"
+          >
+            <Link href={`/open-trip/${trip.slug}`}>Pesan Sekarang</Link>
+          </Button>
         </div>
 
-        {/* CTA */}
-        <Button
-          asChild
-          className="w-full bg-primary hover:bg-primary-dark text-primary-foreground rounded-full"
-        >
-          <Link href={`/open-trip/${trip.slug}`}>Pesan Sekarang</Link>
-        </Button>
       </div>
     </div>
   )
@@ -96,16 +101,20 @@ export function TripCard({ trip, index = 0 }: TripCardProps) {
 
 export function TripCardSkeleton() {
   return (
-    <div className="bg-card rounded-2xl overflow-hidden border border-border animate-pulse">
-      <div className="h-52 bg-muted" />
-      <div className="p-5 space-y-4">
-        <div className="h-6 bg-muted rounded w-3/4" />
-        <div className="flex gap-4">
-          <div className="h-4 bg-muted rounded w-20" />
-          <div className="h-4 bg-muted rounded w-16" />
+    <div className="bg-card rounded-2xl overflow-hidden border border-border animate-pulse flex flex-col h-full">
+      <div className="h-52 bg-muted flex-shrink-0" />
+      <div className="p-5 flex flex-col flex-grow justify-between">
+        <div>
+          <div className="h-6 bg-muted rounded w-3/4" />
         </div>
-        <div className="h-8 bg-muted rounded w-32" />
-        <div className="h-10 bg-muted rounded-full" />
+        <div className="mt-6 space-y-4">
+          <div className="flex gap-4">
+            <div className="h-4 bg-muted rounded w-20" />
+            <div className="h-4 bg-muted rounded w-16" />
+          </div>
+          <div className="h-8 bg-muted rounded w-32" />
+          <div className="h-10 bg-muted rounded-full" />
+        </div>
       </div>
     </div>
   )

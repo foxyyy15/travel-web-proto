@@ -43,7 +43,7 @@ export function Navbar() {
         'fixed top-0 left-0 right-0 z-50 transition-all duration-300',
         isScrolled
           ? 'bg-background/80 backdrop-blur-lg shadow-sm border-b border-border'
-          : 'bg-transparent'
+          : 'bg-background/20'
       )}
     >
       <nav className="container mx-auto px-4 h-20 flex items-center justify-between">
@@ -54,8 +54,7 @@ export function Navbar() {
             alt="Airlangga Travel"
             width={160}
             height={40}
-            className="object-contain"
-            style={{ width: 'auto', height: '40px' }}
+            className="h-10 w-auto object-contain"
             priority
           />
         </Link>

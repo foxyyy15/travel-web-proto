@@ -4,10 +4,12 @@ import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { TripCard } from '@/components/trip-card'
-import { trips } from '@/lib/data'
+import { trips as staticTrips } from '@/lib/data'
+import type { Trip } from '@/lib/types'
 
-export function FeaturedTripsSection() {
-  const featuredTrips = trips.filter((trip) => trip.featured).slice(0, 3)
+export function FeaturedTripsSection({ initialTrips }: { initialTrips?: Trip[] }) {
+  const displayTrips = initialTrips || staticTrips
+  const featuredTrips = displayTrips.filter((trip) => trip.featured).slice(0, 3)
 
   return (
     <section className="py-20 bg-secondary">

@@ -32,6 +32,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import type { Trip, Booking } from '@/lib/types'
 import { useBookingStore, generateBookingCode } from '@/lib/booking-store'
+import { createBookingAction, updateBookingStatusAction } from '@/app/actions/booking'
 
 // Extend Window interface for Midtrans Snap
 declare global {
@@ -197,8 +198,9 @@ export function BookingForm({ trip, onClose }: BookingFormProps) {
         const { token } = await createMidtransTransaction(booking)
 
         window.snap.pay(token, {
-          onSuccess: (result) => {
+          onSuccess: async (result) => {
             console.log('Payment success:', result)
+            await updateBookingStatusAction(booking.id, 'paid')
             updateBookingStatus(booking.id, 'paid')
             setCurrentBooking({ ...booking, status: 'paid' })
             setStep('success')
@@ -234,8 +236,10 @@ export function BookingForm({ trip, onClose }: BookingFormProps) {
   )
 
   const onSubmit = async (data: BookingFormData) => {
-    const booking: Booking = {
-      id: crypto.randomUUID(),
+    const bookingCode = generateBookingCode()
+    const paymentDeadline = addHours(new Date(), 24).toISOString()
+
+    const pendingBookingData = {
       tripId: trip.id,
       tripTitle: trip.title,
       customerName: data.customerName,
@@ -244,18 +248,26 @@ export function BookingForm({ trip, onClose }: BookingFormProps) {
       participants: data.participants,
       departureDate: data.departureDate,
       totalPrice,
-      status: 'pending',
-      bookingCode: generateBookingCode(),
-      createdAt: new Date().toISOString(),
-      paymentDeadline: addHours(new Date(), 24).toISOString(),
+      status: 'pending' as const,
+      bookingCode,
+      paymentDeadline,
     }
 
-    addBooking(booking)
-    setCurrentBooking(booking)
     setStep('processing')
 
+    // Create the booking in DB
+    const res = await createBookingAction(pendingBookingData)
+    const finalBooking = res.success && res.booking ? res.booking : {
+      ...pendingBookingData,
+      id: crypto.randomUUID(),
+      createdAt: new Date().toISOString(),
+    }
+
+    addBooking(finalBooking)
+    setCurrentBooking(finalBooking)
+
     // Open Midtrans payment popup
-    await handleMidtransPayment(booking)
+    await handleMidtransPayment(finalBooking)
   }
 
   return (

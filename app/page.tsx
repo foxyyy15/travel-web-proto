@@ -8,15 +8,24 @@ import { FeaturesSection } from '@/components/sections/features'
 import { TestimonialsSection } from '@/components/sections/testimonials'
 import { CTABannerSection } from '@/components/sections/cta-banner'
 
-export default function HomePage() {
+import { getTrips, getTestimonials } from '@/lib/db-fallback'
+
+export const dynamic = 'force-dynamic'
+
+export default async function HomePage() {
+  const [trips, testimonials] = await Promise.all([
+    getTrips(),
+    getTestimonials(),
+  ])
+
   return (
     <main className="min-h-screen">
       <Navbar />
       <HeroSection />
       <StatsSection />
-      <FeaturedTripsSection />
+      <FeaturedTripsSection initialTrips={trips} />
       <FeaturesSection />
-      <TestimonialsSection />
+      <TestimonialsSection initialTestimonials={testimonials} />
       <CTABannerSection />
       <Footer />
       <WhatsAppButton />

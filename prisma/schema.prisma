@@ -1,0 +1,176 @@
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model AdminUser {
+  id           String   @id @default(uuid())
+  username     String
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  role         String   @default("admin")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("admin_users")
+}
+
+model Trip {
+  id             String              @id @default(uuid())
+  title          String
+  slug           String              @unique
+  destination    String
+  duration       String
+  price          Float
+  originalPrice  Float?              @map("original_price")
+  image          String
+  availableSlots Int                 @map("available_slots")
+  totalSlots     Int                 @map("total_slots")
+  meetingPoint   String              @map("meeting_point")
+  category       String // "domestic" | "international"
+  featured       Boolean             @default(false)
+  createdAt      DateTime            @default(now()) @map("created_at")
+  updatedAt      DateTime            @updatedAt @map("updated_at")
+  images         TripImage[]
+  departureDates TripDepartureDate[]
+  itineraries    TripItinerary[]
+  includes       TripInclude[]
+  excludes       TripExclude[]
+  bookings       Booking[]
+  testimonials   Testimonial[]
+
+  @@map("trips")
+}
+
+model TripImage {
+  id         String   @id @default(uuid())
+  tripId     String   @map("trip_id")
+  imageUrl   String   @map("image_url")
+  orderIndex Int      @map("order_index")
+  trip       Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@map("trip_images")
+}
+
+model TripDepartureDate {
+  id            String   @id @default(uuid())
+  tripId        String   @map("trip_id")
+  departureDate String   @map("departure_date")
+  trip          Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@map("trip_departure_dates")
+}
+
+model TripItinerary {
+  id          String                  @id @default(uuid())
+  tripId      String                  @map("trip_id")
+  day         Int
+  title       String
+  description String
+  activities  TripItineraryActivity[]
+  trip        Trip                    @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  createdAt   DateTime                @default(now()) @map("created_at")
+
+  @@map("trip_itineraries")
+}
+
+model TripItineraryActivity {
+  id          String        @id @default(uuid())
+  itineraryId String        @map("itinerary_id")
+  activity    String
+  orderIndex  Int           @map("order_index")
+  itinerary   TripItinerary @relation(fields: [itineraryId], references: [id], onDelete: Cascade)
+
+  @@map("trip_itinerary_activities")
+}
+
+model TripInclude {
+  id        String   @id @default(uuid())
+  tripId    String   @map("trip_id")
+  item      String
+  trip      Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("trip_includes")
+}
+
+model TripExclude {
+  id        String   @id @default(uuid())
+  tripId    String   @map("trip_id")
+  item      String
+  trip      Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("trip_excludes")
+}
+
+model Car {
+  id          String       @id @default(uuid())
+  name        String
+  type        String
+  capacity    Int
+  pricePerDay Float        @map("price_per_day")
+  image       String
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+  features    CarFeature[]
+  bookings    Booking[]
+
+  @@map("cars")
+}
+
+model CarFeature {
+  id        String   @id @default(uuid())
+  carId     String   @map("car_id")
+  feature   String
+  car       Car      @relation(fields: [carId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("car_features")
+}
+
+model Booking {
+  id              String   @id @default(uuid())
+  bookingCode     String   @unique @map("booking_code")
+  customerName    String   @map("customer_name")
+  email           String
+  whatsapp        String
+  bookingType     String   @default("trip") @map("booking_type") // "trip" | "car"
+  tripId          String?  @map("trip_id")
+  carId           String?  @map("car_id")
+  participants    Int      @default(1)
+  rentalDays      Int      @default(0) @map("rental_days")
+  departureDate   String   @map("departure_date")
+  totalPrice      Float    @map("total_price")
+  status          String   @default("pending") // "pending" | "paid" | "cancelled"
+  paymentDeadline DateTime @map("payment_deadline")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+  trip            Trip?    @relation(fields: [tripId], references: [id], onDelete: SetNull)
+  car             Car?     @relation(fields: [carId], references: [id], onDelete: SetNull)
+
+  @@map("bookings")
+}
+
+model Testimonial {
+  id         String   @id @default(uuid())
+  name       String
+  avatar     String?
+  location   String
+  rating     Int
+  comment    String
+  tripTitle  String   @map("trip_title")
+  tripId     String?  @map("trip_id")
+  isApproved Boolean  @default(false) @map("is_approved")
+  createdAt  DateTime @default(now()) @map("created_at")
+  trip       Trip?    @relation(fields: [tripId], references: [id], onDelete: SetNull)
+
+  @@map("testimonials")
+}

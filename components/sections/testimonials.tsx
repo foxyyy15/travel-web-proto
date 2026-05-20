@@ -5,9 +5,11 @@ import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronLeft, ChevronRight, Star, Quote } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { testimonials } from '@/lib/data'
+import { testimonials as staticTestimonials } from '@/lib/data'
+import type { Testimonial } from '@/lib/types'
 
-export function TestimonialsSection() {
+export function TestimonialsSection({ initialTestimonials }: { initialTestimonials?: Testimonial[] }) {
+  const displayTestimonials = initialTestimonials || staticTestimonials
   const [currentIndex, setCurrentIndex] = useState(0)
   const [mounted, setMounted] = useState(false)
 
@@ -16,14 +18,14 @@ export function TestimonialsSection() {
   }, [])
 
   const next = () => {
-    setCurrentIndex((prev) => (prev + 1) % testimonials.length)
+    setCurrentIndex((prev) => (prev + 1) % displayTestimonials.length)
   }
 
   const prev = () => {
-    setCurrentIndex((prev) => (prev - 1 + testimonials.length) % testimonials.length)
+    setCurrentIndex((prev) => (prev - 1 + displayTestimonials.length) % displayTestimonials.length)
   }
 
-  const currentTestimonial = testimonials[currentIndex]
+  const currentTestimonial = displayTestimonials[currentIndex]
 
   return (
     <section className="py-20 bg-secondary">
@@ -170,7 +172,7 @@ export function TestimonialsSection() {
 
             {/* Dots */}
             <div className="flex items-center justify-center gap-2 mt-8">
-              {testimonials.map((_, i) => (
+              {displayTestimonials.map((_, i) => (
                 <button
                   key={i}
                   onClick={() => setCurrentIndex(i)}
