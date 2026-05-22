@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -32,7 +32,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import type { Trip, Booking } from '@/lib/types'
 import { useBookingStore, generateBookingCode } from '@/lib/booking-store'
-import { createBookingAction, updateBookingStatusAction } from '@/app/actions/booking'
+import { createBookingAction, updateBookingStatusAction, sendBookingEmailAction } from '@/app/actions/booking'
 
 // Extend Window interface for Midtrans Snap
 declare global {
@@ -78,6 +78,15 @@ export function BookingForm({ trip, onClose }: BookingFormProps) {
   const [step, setStep] = useState<'form' | 'processing' | 'success'>('form')
   const [isProcessing, setIsProcessing] = useState(false)
   const [currentBooking, setCurrentBooking] = useState<Booking | null>(null)
+  const activeTransactionRef = useRef<{
+    bookingId: string | null
+    status: 'idle' | 'success' | 'pending' | 'error'
+    emailSent: 'none' | 'pending' | 'paid'
+  }>({
+    bookingId: null,
+    status: 'idle',
+    emailSent: 'none',
+  })
   const [snapLoaded, setSnapLoaded] = useState(false)
   const [midtransConfig, setMidtransConfig] = useState<{
     clientKey: string
@@ -194,45 +203,107 @@ export function BookingForm({ trip, onClose }: BookingFormProps) {
 
       setIsProcessing(true)
 
+      // Initialize/reset the active transaction state for this booking
+      activeTransactionRef.current = {
+        bookingId: booking.id,
+        status: 'idle',
+        emailSent: 'none',
+      }
+
+      // Helper to send email only once
+      const sendEmailOnce = (status: 'pending' | 'paid') => {
+        const tx = activeTransactionRef.current
+        if (tx.bookingId !== booking.id) return // Safety check
+        
+        // Rules:
+        // 1. If we already sent a 'paid' email, never send anything else.
+        // 2. If we already sent a 'pending' email, don't send another 'pending' email.
+        if (tx.emailSent === 'paid') return
+        if (tx.emailSent === 'pending' && status === 'pending') return
+
+        const targetBooking = status === 'paid' ? { ...booking, status: 'paid' as const } : booking
+        tx.emailSent = status
+        
+        sendBookingEmailAction(targetBooking).catch((err) => {
+          console.error(`Failed to send ${status} email:`, err)
+        })
+      }
+
       try {
         const { token } = await createMidtransTransaction(booking)
 
         window.snap.pay(token, {
           onSuccess: async (result) => {
             console.log('Payment success:', result)
+            activeTransactionRef.current.status = 'success'
+
             await updateBookingStatusAction(booking.id, 'paid')
             updateBookingStatus(booking.id, 'paid')
-            setCurrentBooking({ ...booking, status: 'paid' })
+            const updatedBooking = { ...booking, status: 'paid' as const }
+            setCurrentBooking(updatedBooking)
             setStep('success')
             toast.success('Pembayaran berhasil!')
+            
+            // Send success email with 'paid' status
+            sendEmailOnce('paid')
           },
           onPending: (result) => {
             console.log('Payment pending:', result)
+            activeTransactionRef.current.status = 'pending'
+
             toast.info('Pembayaran dalam proses, silakan selesaikan pembayaran')
             setStep('form')
+            
+            // Send pending email
+            sendEmailOnce('pending')
           },
           onError: (result) => {
             console.error('Payment error:', result)
+            activeTransactionRef.current.status = 'error'
+
             toast.error('Pembayaran gagal, silakan coba lagi')
             setStep('form')
+            
+            // Send pending email so they can pay later
+            sendEmailOnce('pending')
           },
           onClose: () => {
             console.log('Payment popup closed')
-            if (step !== 'success') {
-              toast.info('Pembayaran dibatalkan')
-              setStep('form')
+            const tx = activeTransactionRef.current
+            
+            // Check status that was set in callbacks
+            if (tx.status === 'success') {
+              // Paid successfully, step should already be 'success'
+              // No need to send email or update step
+              return
             }
+
+            if (tx.status === 'pending') {
+              // They chose a payment method and closed the popup (to pay via ATM/GoPay/etc.)
+              toast.info('Selesaikan pembayaran Anda sesuai instruksi')
+              setStep('form')
+              sendEmailOnce('pending')
+              return
+            }
+            
+            // Otherwise, they closed it without finishing (status is 'idle' or 'error')
+            toast.info('Pembayaran ditangguhkan')
+            setStep('form')
+            sendEmailOnce('pending')
           },
         })
       } catch (error) {
         console.error('Payment error:', error)
         toast.error('Gagal memproses pembayaran')
         setStep('form')
+        
+        // Send pending email as fallback
+        sendEmailOnce('pending')
       } finally {
         setIsProcessing(false)
       }
     },
-    [snapLoaded, step, updateBookingStatus]
+    [snapLoaded, updateBookingStatus]
   )
 
   const onSubmit = async (data: BookingFormData) => {

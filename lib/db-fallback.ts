@@ -198,3 +198,59 @@ export async function createBooking(data: Omit<Booking, 'id' | 'createdAt'>): Pr
     return booking
   }
 }
+
+export async function getBookingByCode(bookingCode: string): Promise<Booking | null> {
+  if (!process.env.DATABASE_URL) {
+    // Simulasi: jika tidak ada DB, kita kembalikan mock booking jika kodenya valid
+    if (bookingCode.toUpperCase().startsWith('ALG-') || bookingCode.toUpperCase().startsWith('TRV-')) {
+      return {
+        id: 'mock-booking-id',
+        bookingCode: bookingCode.toUpperCase(),
+        customerName: 'Budi Santoso',
+        email: 'budi.santoso@gmail.com',
+        whatsapp: '081234567890',
+        tripId: 'mock-trip-id',
+        tripTitle: 'Open Trip Labuan Bajo Premium',
+        participants: 2,
+        departureDate: new Date(Date.now() + 86400000 * 5).toISOString().split('T')[0],
+        totalPrice: 3500000,
+        status: 'pending',
+        paymentDeadline: new Date(Date.now() + 86400000).toISOString(),
+        createdAt: new Date().toISOString(),
+      }
+    }
+    return null
+  }
+
+  try {
+    const dbBooking = await prisma.booking.findUnique({
+      where: { bookingCode },
+      include: {
+        trip: true,
+        car: true,
+      },
+    })
+
+    if (!dbBooking) return null
+
+    return {
+      id: dbBooking.id,
+      bookingCode: dbBooking.bookingCode,
+      customerName: dbBooking.customerName,
+      email: dbBooking.email,
+      whatsapp: dbBooking.whatsapp,
+      tripId: dbBooking.tripId || '',
+      tripTitle: dbBooking.trip?.title || dbBooking.car?.name || 'Pemesanan Travel',
+      participants: dbBooking.participants,
+      departureDate: dbBooking.departureDate,
+      totalPrice: dbBooking.totalPrice,
+      status: dbBooking.status as 'pending' | 'paid' | 'cancelled',
+      paymentDeadline: dbBooking.paymentDeadline.toISOString(),
+      createdAt: dbBooking.createdAt.toISOString(),
+    }
+  } catch (error) {
+    console.error(`Error fetching booking by code ${bookingCode}:`, error)
+    return null
+  }
+}
+

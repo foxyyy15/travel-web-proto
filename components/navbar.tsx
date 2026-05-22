@@ -90,7 +90,7 @@ export function Navbar() {
             asChild
             className="bg-primary hover:bg-primary-dark text-primary-foreground rounded-full px-6"
           >
-            <Link href="/open-trip">Book Now</Link>
+            <Link href="/track-order">Lacak Pesanan</Link>
           </Button>
         </div>
 
@@ -133,8 +133,8 @@ export function Navbar() {
                 asChild
                 className="bg-primary hover:bg-primary-dark text-primary-foreground rounded-full mt-2"
               >
-                <Link href="/open-trip" onClick={() => setIsOpen(false)}>
-                  Book Now
+                <Link href="/track-order" onClick={() => setIsOpen(false)}>
+                  Lacak Pesanan
                 </Link>
               </Button>
             </div>

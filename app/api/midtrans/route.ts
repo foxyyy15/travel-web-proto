@@ -34,9 +34,12 @@ export async function POST(request: Request) {
       )
     }
 
+    // Create unique order ID for Midtrans to avoid duplicate order ID errors (allows payment re-attempts)
+    const uniqueOrderId = `${orderId}-${Date.now()}`
+
     // Create Midtrans transaction payload
     const transactionDetails = {
-      order_id: orderId,
+      order_id: uniqueOrderId,
       gross_amount: grossAmount,
     }
 
@@ -48,10 +51,10 @@ export async function POST(request: Request) {
 
     const itemDetails = [
       {
-        id: orderId,
-        price: Math.round(grossAmount / participants),
-        quantity: participants,
-        name: tripTitle.substring(0, 50), // Midtrans limits item name to 50 chars
+        id: uniqueOrderId,
+        price: Math.round(grossAmount / (participants || 1)),
+        quantity: participants || 1,
+        name: (tripTitle || 'Pemesanan Travel').substring(0, 50), // Midtrans limits item name to 50 chars
       },
     ]
 
