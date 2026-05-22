@@ -31,11 +31,6 @@ export function HeroSection() {
       <div className="relative container mx-auto px-4 pt-20">
         <div className="max-w-3xl">
           <div className="space-y-6">
-            {/* Badge */}
-            <div className="inline-flex items-center gap-2 bg-background/10 backdrop-blur-md border border-background/20 rounded-full px-4 py-2 text-background">
-              <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
-              <span className="text-sm font-medium">Open Trip Tersedia</span>
-            </div>
 
             {/* Heading */}
             <h1 className="font-serif font-bold text-4xl md:text-5xl lg:text-6xl text-background leading-tight text-balance">
@@ -45,7 +40,7 @@ export function HeroSection() {
 
             {/* Subheading */}
             <p className="text-lg md:text-xl text-background/90 max-w-xl leading-relaxed">
-              Wujudkan perjalanan impian Anda dengan destinasi terbaik, pelayanan prima, 
+              Wujudkan perjalanan impian Anda dengan destinasi terbaik, pelayanan prima,
               dan harga yang terjangkau. Pengalaman tak terlupakan menanti!
             </p>
 
