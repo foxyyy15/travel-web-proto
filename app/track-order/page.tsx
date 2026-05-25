@@ -127,9 +127,9 @@ function TrackOrderContent() {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const navigationEntries = performance.getEntriesByType('navigation');
-      const isReload = navigationEntries.length > 0 && 
+      const isReload = navigationEntries.length > 0 &&
         (navigationEntries[0] as PerformanceNavigationTiming).type === 'reload';
-      
+
       if (isReload) {
         router.replace(pathname);
       }
@@ -256,7 +256,7 @@ function TrackOrderContent() {
         },
         onClose: () => {
           console.log('Payment popup closed')
-          toast.info('Pembayaran ditangguhkan')
+          toast.info('Pembayaran dibatalkan')
         },
       })
     } catch (err) {

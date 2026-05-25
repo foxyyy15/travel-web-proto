@@ -34,6 +34,7 @@ model Trip {
   meetingPoint   String              @map("meeting_point")
   category       String // "domestic" | "international"
   featured       Boolean             @default(false)
+  depositPercentage Int                 @default(100) @map("deposit_percentage")
   createdAt      DateTime            @default(now()) @map("created_at")
   updatedAt      DateTime            @updatedAt @map("updated_at")
   images         TripImage[]

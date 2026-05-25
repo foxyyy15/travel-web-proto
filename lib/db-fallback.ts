@@ -48,6 +48,7 @@ export async function getTrips(): Promise<Trip[]> {
       excludes: t.excludes.map((exc) => exc.item),
       category: t.category as 'domestic' | 'international',
       featured: t.featured,
+      depositPercentage: (t as any).depositPercentage ?? 100,
     }))
   } catch (error) {
     console.warn('Prisma getTrips failed, falling back to static data:', error)
@@ -102,6 +103,7 @@ export async function getTripBySlug(slug: string): Promise<Trip | null> {
       excludes: t.excludes.map((exc) => exc.item),
       category: t.category as 'domestic' | 'international',
       featured: t.featured,
+      depositPercentage: (t as any).depositPercentage ?? 100,
     }
   } catch (error) {
     console.warn(`Prisma getTripBySlug(${slug}) failed, falling back to static data:`, error)

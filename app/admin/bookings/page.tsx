@@ -45,7 +45,7 @@ const mockBookings = [
     bookingType: 'car',
     departureDate: '2026-05-28',
     totalPrice: 1600000,
-    status: 'pending',
+    status: 'dp_paid',
     participants: 2, // 2 days
     createdAt: new Date(Date.now() - 3600000 * 5).toISOString(),
   },
@@ -62,7 +62,7 @@ const mockBookings = [
     participants: 2,
     createdAt: new Date(Date.now() - 3600000 * 24).toISOString(),
   },
-]
+].filter(b => b.status !== 'pending')
 
 export default async function BookingsPage() {
   if (!process.env.DATABASE_URL) {
@@ -71,6 +71,11 @@ export default async function BookingsPage() {
 
   try {
     const dbBookings = await prisma.booking.findMany({
+      where: {
+        status: {
+          not: 'pending',
+        },
+      },
       orderBy: { createdAt: 'desc' },
     })
 

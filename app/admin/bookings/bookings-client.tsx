@@ -61,7 +61,7 @@ export default function BookingsClient({ initialBookings, isMockData }: Bookings
     }).format(price)
   }
 
-  const handleStatusChange = async (bookingId: string, newStatus: 'pending' | 'paid' | 'cancelled') => {
+  const handleStatusChange = async (bookingId: string, newStatus: 'pending' | 'dp_paid' | 'paid' | 'cancelled') => {
     if (isMockData) {
       toast.warning('Mode Simulasi: Perubahan status hanya disimpan di memori sementara')
       setBookings((prev) =>
@@ -73,7 +73,7 @@ export default function BookingsClient({ initialBookings, isMockData }: Bookings
     startTransition(async () => {
       const result = await updateBookingStatus(bookingId, newStatus)
       if (result.success) {
-        toast.success(`Status pemesanan berhasil diubah menjadi ${newStatus}`)
+        toast.success(`Status pemesanan berhasil diubah menjadi ${newStatus === 'dp_paid' ? 'DP Terbayar' : newStatus === 'paid' ? 'Lunas' : newStatus}`)
         setBookings((prev) =>
           prev.map((b) => (b.id === bookingId ? { ...b, status: newStatus } : b))
         )
@@ -131,8 +131,9 @@ export default function BookingsClient({ initialBookings, isMockData }: Bookings
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Semua Status</SelectItem>
-              <SelectItem value="pending">Pending</SelectItem>
+              <SelectItem value="dp_paid">DP Terbayar</SelectItem>
               <SelectItem value="paid">Lunas (Paid)</SelectItem>
+              <SelectItem value="pending">Pending</SelectItem>
               <SelectItem value="cancelled">Batal</SelectItem>
             </SelectContent>
           </Select>
@@ -253,33 +254,48 @@ export default function BookingsClient({ initialBookings, isMockData }: Bookings
                       className={
                         b.status === 'paid'
                           ? 'bg-success text-success-foreground'
-                          : b.status === 'pending'
+                          : b.status === 'dp_paid'
                           ? 'bg-amber-500 text-white'
+                          : b.status === 'pending'
+                          ? 'bg-zinc-500 text-white'
                           : 'bg-destructive text-destructive-foreground'
                       }
                     >
-                      {b.status === 'paid' ? 'Lunas' : b.status === 'pending' ? 'Pending' : 'Batal'}
+                      {b.status === 'paid' ? 'Lunas' : b.status === 'dp_paid' ? 'DP Terbayar' : b.status === 'pending' ? 'Pending' : 'Batal'}
                     </Badge>
                   </div>
 
                   {/* Actions Dropdown / Buttons */}
                   <div className="flex items-center gap-1.5">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleStatusChange(b.id, 'paid')}
-                      disabled={b.status === 'paid' || isPending}
-                      className="rounded-lg h-9 text-xs border-success/30 hover:bg-success/10 hover:text-success text-success-dark flex items-center gap-1"
-                    >
-                      <CheckCircle2 className="w-4 h-4" />
-                      Lunas
-                    </Button>
+                    {b.status === 'dp_paid' ? (
+                      <Button
+                        size="sm"
+                        variant="default"
+                        onClick={() => handleStatusChange(b.id, 'paid')}
+                        disabled={isPending}
+                        className="rounded-lg h-9 text-xs bg-success hover:bg-success/90 text-success-foreground flex items-center gap-1 cursor-pointer font-medium"
+                      >
+                        <CheckCircle2 className="w-4 h-4" />
+                        Pelunasan
+                      </Button>
+                    ) : (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleStatusChange(b.id, 'paid')}
+                        disabled={b.status === 'paid' || isPending}
+                        className="rounded-lg h-9 text-xs border-success/30 hover:bg-success/10 hover:text-success text-success-dark flex items-center gap-1 cursor-pointer"
+                      >
+                        <CheckCircle2 className="w-4 h-4" />
+                        Lunas
+                      </Button>
+                    )}
                     <Button
                       size="sm"
                       variant="outline"
                       onClick={() => handleStatusChange(b.id, 'cancelled')}
                       disabled={b.status === 'cancelled' || isPending}
-                      className="rounded-lg h-9 text-xs border-destructive/30 hover:bg-destructive/10 hover:text-destructive text-destructive flex items-center gap-1"
+                      className="rounded-lg h-9 text-xs border-destructive/30 hover:bg-destructive/10 hover:text-destructive text-destructive flex items-center gap-1 cursor-pointer"
                     >
                       <XCircle className="w-4 h-4" />
                       Batal

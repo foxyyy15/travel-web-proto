@@ -1,6 +1,23 @@
 import Link from 'next/link'
 import Image from 'next/image'
-import { Phone, Mail, MapPin, Instagram, Facebook, Youtube } from 'lucide-react'
+import { Phone, Mail, MapPin, Instagram, Youtube } from 'lucide-react'
+
+function TiktokIcon({ className, ...props }: React.ComponentProps<'svg'>) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      {...props}
+    >
+      <path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5" />
+    </svg>
+  )
+}
 
 const quickLinks = [
   { href: '/', label: 'Home' },
@@ -37,12 +54,12 @@ export function Footer() {
               />
             </Link>
             <p className="text-background/70 text-sm leading-relaxed">
-              Airlangga Travel adalah agen perjalanan terpercaya yang menyediakan layanan Open Trip, 
+              Airlangga Travel adalah agen perjalanan terpercaya yang menyediakan layanan Open Trip,
               Private Trip, dan rental kendaraan berkualitas dengan harga terbaik.
             </p>
             <div className="flex items-center gap-4">
               <a
-                href="https://instagram.com"
+                href="https://www.instagram.com/airlangga_travel/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-10 h-10 rounded-full bg-background/10 flex items-center justify-center hover:bg-primary transition-colors"
@@ -50,15 +67,15 @@ export function Footer() {
                 <Instagram className="w-5 h-5" />
               </a>
               <a
-                href="https://facebook.com"
+                href="https://www.tiktok.com/@airlanggatour_and_travel"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-10 h-10 rounded-full bg-background/10 flex items-center justify-center hover:bg-primary transition-colors"
               >
-                <Facebook className="w-5 h-5" />
+                <TiktokIcon className="w-5 h-5" />
               </a>
               <a
-                href="https://youtube.com"
+                href="https://www.youtube.com/@AirlanggaTourTravel"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-10 h-10 rounded-full bg-background/10 flex items-center justify-center hover:bg-primary transition-colors"

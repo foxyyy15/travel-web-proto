@@ -16,10 +16,17 @@ export default async function AdminTripsPage() {
     price: t.price,
     originalPrice: t.originalPrice,
     image: t.image,
+    images: t.images || [],
     availableSlots: t.availableSlots,
     totalSlots: t.totalSlots,
+    departureDates: t.departureDates || [],
+    meetingPoint: t.meetingPoint || '',
+    itinerary: t.itinerary || [],
+    includes: t.includes || [],
+    excludes: t.excludes || [],
     category: t.category,
     featured: t.featured ?? false,
+    depositPercentage: t.depositPercentage ?? 100,
   }))
 
   const isMockData = !process.env.DATABASE_URL
