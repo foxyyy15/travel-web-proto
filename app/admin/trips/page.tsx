@@ -26,6 +26,7 @@ export default async function AdminTripsPage() {
     excludes: t.excludes || [],
     category: t.category,
     featured: t.featured ?? false,
+    depositPercentage: t.depositPercentage ?? 100,
   }))
 
   const isMockData = !process.env.DATABASE_URL

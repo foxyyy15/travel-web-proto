@@ -61,6 +61,7 @@ const emptyFormValues = {
   excludes: [] as string[],
   category: 'domestic' as 'domestic' | 'international',
   featured: false,
+  depositPercentage: 100,
 }
 
 export default function TripsClient({ initialTrips, isMockData }: TripsClientProps) {
@@ -131,6 +132,7 @@ export default function TripsClient({ initialTrips, isMockData }: TripsClientPro
       excludes: trip.excludes || [],
       category: trip.category,
       featured: trip.featured || false,
+      depositPercentage: trip.depositPercentage ?? 100,
     })
     setActiveTab('info')
     setIsFormOpen(true)
@@ -317,18 +319,19 @@ export default function TripsClient({ initialTrips, isMockData }: TripsClientPro
       excludes: formValues.excludes.filter((exc) => exc.trim() !== ''),
       category: formValues.category,
       featured: formValues.featured,
+      depositPercentage: Number(formValues.depositPercentage),
     }
 
     if (isMockData) {
       if (editingTrip) {
         toast.warning('Mode Simulasi: Data paket diperbarui di memori sementara')
         setTrips((prev) =>
-          prev.map((t) => (t.id === editingTrip.id ? { ...submissionData, id: editingTrip.id } : t))
+          prev.map((t) => (t.id === editingTrip.id ? { ...submissionData, id: editingTrip.id } as Trip : t))
         )
       } else {
         toast.warning('Mode Simulasi: Paket baru ditambahkan di memori sementara')
         const newId = crypto.randomUUID()
-        setTrips((prev) => [{ ...submissionData, id: newId }, ...prev])
+        setTrips((prev) => [{ ...submissionData, id: newId } as Trip, ...prev])
       }
       setIsFormOpen(false)
       return
@@ -340,7 +343,7 @@ export default function TripsClient({ initialTrips, isMockData }: TripsClientPro
         if (res.success) {
           toast.success('Paket open trip berhasil diperbarui!')
           setTrips((prev) =>
-            prev.map((t) => (t.id === editingTrip.id ? { ...submissionData, id: editingTrip.id } : t))
+            prev.map((t) => (t.id === editingTrip.id ? { ...submissionData, id: editingTrip.id } as Trip : t))
           )
           setIsFormOpen(false)
         } else {
@@ -350,8 +353,8 @@ export default function TripsClient({ initialTrips, isMockData }: TripsClientPro
         const res = await createTrip(submissionData)
         if (res.success) {
           toast.success('Paket open trip baru berhasil dibuat!')
-          const newId = res.data?.id || crypto.randomUUID()
-          setTrips((prev) => [{ ...submissionData, id: newId }, ...prev])
+          const newId = (res as any).data?.id || crypto.randomUUID()
+          setTrips((prev) => [{ ...submissionData, id: newId } as Trip, ...prev])
           setIsFormOpen(false)
         } else {
           toast.error(res.error || 'Gagal membuat paket open trip baru')
@@ -654,6 +657,24 @@ export default function TripsClient({ initialTrips, isMockData }: TripsClientPro
                       onChange={(e) => setFormValues((prev) => ({ ...prev, originalPrice: e.target.value ? Number(e.target.value) : undefined }))}
                       placeholder="Harga coret sebelum diskon"
                     />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="depositPercentage">Persentase Down Payment (DP) *</Label>
+                    <select
+                      id="depositPercentage"
+                      value={formValues.depositPercentage ?? 100}
+                      onChange={(e) => setFormValues((prev) => ({ ...prev, depositPercentage: Number(e.target.value) }))}
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <option value={100}>Lunas Langsung (100%)</option>
+                      <option value={50}>DP 50%</option>
+                      <option value={30}>DP 30%</option>
+                      <option value={20}>DP 20%</option>
+                      <option value={10}>DP 10%</option>
+                    </select>
                   </div>
                 </div>
 

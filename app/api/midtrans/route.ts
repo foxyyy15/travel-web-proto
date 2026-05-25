@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import crypto from 'crypto'
+import { prisma } from '@/lib/prisma'
 
 // Midtrans configuration
 const MIDTRANS_SERVER_KEY = process.env.MIDTRANS_SERVER_KEY || ''
@@ -133,7 +134,7 @@ export async function PUT(request: Request) {
     }
 
     // Determine payment status
-    let paymentStatus: 'pending' | 'paid' | 'cancelled' = 'pending'
+    let paymentStatus: 'pending' | 'dp_paid' | 'paid' | 'cancelled' = 'pending'
 
     if (transaction_status === 'capture' || transaction_status === 'settlement') {
       if (fraud_status === 'accept' || !fraud_status) {
@@ -147,8 +148,38 @@ export async function PUT(request: Request) {
       paymentStatus = 'cancelled'
     }
 
-    // Here you would update your database with the payment status
-    // For now, we just return the status
+    // Update database with payment status
+    const parts = order_id.split('-')
+    const bookingCode = parts.slice(0, parts.length - 1).join('-')
+
+    if (process.env.DATABASE_URL && (paymentStatus === 'paid' || paymentStatus === 'cancelled')) {
+      try {
+        const booking = await prisma.booking.findUnique({
+          where: { bookingCode },
+          include: { trip: true },
+        })
+
+        if (booking) {
+          let resolvedStatus: 'pending' | 'dp_paid' | 'paid' | 'cancelled' = paymentStatus
+          if (paymentStatus === 'paid') {
+            const depositPercentage = booking.trip?.depositPercentage ?? 100
+            if (depositPercentage < 100) {
+              resolvedStatus = 'dp_paid'
+            }
+          }
+
+          await prisma.booking.update({
+            where: { id: booking.id },
+            data: { status: resolvedStatus },
+          })
+          
+          paymentStatus = resolvedStatus
+        }
+      } catch (dbError) {
+        console.error('Error updating booking status from webhook:', dbError)
+      }
+    }
+
     return NextResponse.json({
       orderId: order_id,
       status: paymentStatus,

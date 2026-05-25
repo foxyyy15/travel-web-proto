@@ -17,6 +17,7 @@ export interface Trip {
   excludes: string[]
   category: 'domestic' | 'international'
   featured?: boolean
+  depositPercentage?: number
 }
 
 export interface ItineraryDay {
@@ -36,7 +37,7 @@ export interface Booking {
   participants: number
   departureDate: string
   totalPrice: number
-  status: 'pending' | 'paid' | 'cancelled'
+  status: 'pending' | 'dp_paid' | 'paid' | 'cancelled'
   bookingCode: string
   createdAt: string
   paymentDeadline: string

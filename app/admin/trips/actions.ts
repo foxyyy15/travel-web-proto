@@ -51,6 +51,7 @@ export async function createTrip(tripData: Omit<Trip, 'id'>) {
       excludes = [],
       category,
       featured = false,
+      depositPercentage = 100,
     } = tripData
 
     // Check if slug is unique
@@ -76,6 +77,7 @@ export async function createTrip(tripData: Omit<Trip, 'id'>) {
         meetingPoint,
         category,
         featured,
+        depositPercentage: Number(depositPercentage),
         images: {
           create: images.map((imageUrl, index) => ({
             imageUrl,
@@ -110,7 +112,7 @@ export async function createTrip(tripData: Omit<Trip, 'id'>) {
             },
           })),
         },
-      },
+      } as any,
     })
 
     revalidatePath('/')
@@ -149,6 +151,7 @@ export async function updateTrip(tripId: string, tripData: Omit<Trip, 'id'>) {
       excludes = [],
       category,
       featured = false,
+      depositPercentage = 100,
     } = tripData
 
     // Check if slug is unique (excluding this trip)
@@ -183,6 +186,7 @@ export async function updateTrip(tripId: string, tripData: Omit<Trip, 'id'>) {
           meetingPoint,
           category,
           featured,
+          depositPercentage: Number(depositPercentage),
           images: {
             create: images.map((imageUrl, index) => ({
               imageUrl,
@@ -217,7 +221,7 @@ export async function updateTrip(tripId: string, tripData: Omit<Trip, 'id'>) {
               },
             })),
           },
-        },
+        } as any,
       })
     })
 

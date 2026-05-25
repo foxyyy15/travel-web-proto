@@ -29,7 +29,7 @@ export async function sendBookingEmailAction(booking: Booking) {
   }
 }
 
-export async function updateBookingStatusAction(bookingId: string, status: 'pending' | 'paid' | 'cancelled') {
+export async function updateBookingStatusAction(bookingId: string, status: Booking['status']) {
   if (!process.env.DATABASE_URL) {
     return { success: false, error: 'Database tidak terkoneksi (Mode Simulasi)' }
   }

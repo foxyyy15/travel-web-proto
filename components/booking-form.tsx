@@ -81,7 +81,7 @@ export function BookingForm({ trip, onClose }: BookingFormProps) {
   const activeTransactionRef = useRef<{
     bookingId: string | null
     status: 'idle' | 'success' | 'pending' | 'error'
-    emailSent: 'none' | 'pending' | 'paid'
+    emailSent: 'none' | 'pending' | 'dp_paid' | 'paid'
   }>({
     bookingId: null,
     status: 'idle',
@@ -111,6 +111,10 @@ export function BookingForm({ trip, onClose }: BookingFormProps) {
 
   const participants = watch('participants') || 1
   const totalPrice = trip.price * participants
+  const depositPercentage = trip.depositPercentage ?? 100
+  const isPartialDeposit = depositPercentage < 100
+  const depositAmount = totalPrice * (depositPercentage / 100)
+  const remainingAmount = totalPrice - depositAmount
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('id-ID', {
@@ -166,6 +170,7 @@ export function BookingForm({ trip, onClose }: BookingFormProps) {
 
   const createMidtransTransaction = async (booking: Booking) => {
     try {
+      const amtToPay = booking.totalPrice * (depositPercentage / 100)
       const response = await fetch('/api/midtrans', {
         method: 'POST',
         headers: {
@@ -173,7 +178,7 @@ export function BookingForm({ trip, onClose }: BookingFormProps) {
         },
         body: JSON.stringify({
           orderId: booking.bookingCode,
-          grossAmount: booking.totalPrice,
+          grossAmount: amtToPay,
           customerName: booking.customerName,
           email: booking.email,
           phone: booking.whatsapp,
@@ -211,19 +216,17 @@ export function BookingForm({ trip, onClose }: BookingFormProps) {
       }
 
       // Helper to send email only once
-      const sendEmailOnce = (status: 'pending' | 'paid') => {
+      const sendEmailOnce = (status: 'dp_paid' | 'paid') => {
         const tx = activeTransactionRef.current
         if (tx.bookingId !== booking.id) return // Safety check
-        
-        // Rules:
-        // 1. If we already sent a 'paid' email, never send anything else.
-        // 2. If we already sent a 'pending' email, don't send another 'pending' email.
-        if (tx.emailSent === 'paid') return
-        if (tx.emailSent === 'pending' && status === 'pending') return
 
-        const targetBooking = status === 'paid' ? { ...booking, status: 'paid' as const } : booking
+        // Rules:
+        // 1. If we already sent a 'paid'/'dp_paid' email, never send anything else.
+        if (tx.emailSent === 'paid' || tx.emailSent === 'dp_paid') return
+
+        const targetBooking = { ...booking, status } as Booking
         tx.emailSent = status
-        
+
         sendBookingEmailAction(targetBooking).catch((err) => {
           console.error(`Failed to send ${status} email:`, err)
         })
@@ -237,15 +240,17 @@ export function BookingForm({ trip, onClose }: BookingFormProps) {
             console.log('Payment success:', result)
             activeTransactionRef.current.status = 'success'
 
-            await updateBookingStatusAction(booking.id, 'paid')
-            updateBookingStatus(booking.id, 'paid')
-            const updatedBooking = { ...booking, status: 'paid' as const }
+            const nextStatus = isPartialDeposit ? ('dp_paid' as const) : ('paid' as const)
+
+            await updateBookingStatusAction(booking.id, nextStatus)
+            updateBookingStatus(booking.id, nextStatus)
+            const updatedBooking = { ...booking, status: nextStatus }
             setCurrentBooking(updatedBooking)
             setStep('success')
-            toast.success('Pembayaran berhasil!')
-            
-            // Send success email with 'paid' status
-            sendEmailOnce('paid')
+            toast.success(isPartialDeposit ? 'Pembayaran Uang Muka (DP) berhasil!' : 'Pembayaran berhasil!')
+
+            // Send success email with correct status
+            sendEmailOnce(nextStatus)
           },
           onPending: (result) => {
             console.log('Payment pending:', result)
@@ -253,9 +258,6 @@ export function BookingForm({ trip, onClose }: BookingFormProps) {
 
             toast.info('Pembayaran dalam proses, silakan selesaikan pembayaran')
             setStep('form')
-            
-            // Send pending email
-            sendEmailOnce('pending')
           },
           onError: (result) => {
             console.error('Payment error:', result)
@@ -263,14 +265,11 @@ export function BookingForm({ trip, onClose }: BookingFormProps) {
 
             toast.error('Pembayaran gagal, silakan coba lagi')
             setStep('form')
-            
-            // Send pending email so they can pay later
-            sendEmailOnce('pending')
           },
           onClose: () => {
             console.log('Payment popup closed')
             const tx = activeTransactionRef.current
-            
+
             // Check status that was set in callbacks
             if (tx.status === 'success') {
               // Paid successfully, step should already be 'success'
@@ -282,28 +281,23 @@ export function BookingForm({ trip, onClose }: BookingFormProps) {
               // They chose a payment method and closed the popup (to pay via ATM/GoPay/etc.)
               toast.info('Selesaikan pembayaran Anda sesuai instruksi')
               setStep('form')
-              sendEmailOnce('pending')
               return
             }
-            
+
             // Otherwise, they closed it without finishing (status is 'idle' or 'error')
-            toast.info('Pembayaran ditangguhkan')
+            toast.info('Pembayaran dibatalkan')
             setStep('form')
-            sendEmailOnce('pending')
           },
         })
       } catch (error) {
         console.error('Payment error:', error)
         toast.error('Gagal memproses pembayaran')
         setStep('form')
-        
-        // Send pending email as fallback
-        sendEmailOnce('pending')
       } finally {
         setIsProcessing(false)
       }
     },
-    [snapLoaded, updateBookingStatus]
+    [snapLoaded, updateBookingStatus, isPartialDeposit]
   )
 
   const onSubmit = async (data: BookingFormData) => {
@@ -461,12 +455,39 @@ export function BookingForm({ trip, onClose }: BookingFormProps) {
                   <span className="text-muted-foreground">Jumlah peserta</span>
                   <span className="text-card-foreground">x {participants}</span>
                 </div>
-                <div className="border-t border-border pt-3 flex justify-between">
-                  <span className="font-semibold text-card-foreground">Total</span>
-                  <span className="font-mono font-bold text-xl text-primary">
-                    {formatPrice(totalPrice)}
-                  </span>
-                </div>
+                {isPartialDeposit ? (
+                  <>
+                    <div className="border-t border-border pt-3 flex justify-between text-sm">
+                      <span className="text-muted-foreground">Total Harga</span>
+                      <span className="font-medium text-card-foreground">
+                        {formatPrice(totalPrice)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Uang Muka (DP {depositPercentage}%)</span>
+                      <span className="font-medium text-card-foreground text-success">
+                        {formatPrice(depositAmount)}
+                      </span>
+                    </div>
+                    <div className="border-t border-border/50 pt-3 flex justify-between">
+                      <span className="font-semibold text-card-foreground">Bayar Sekarang (DP)</span>
+                      <span className="font-mono font-bold text-xl text-primary">
+                        {formatPrice(depositAmount)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>Sisa pelunasan (dibayar nanti)</span>
+                      <span>{formatPrice(remainingAmount)}</span>
+                    </div>
+                  </>
+                ) : (
+                  <div className="border-t border-border pt-3 flex justify-between">
+                    <span className="font-semibold text-card-foreground">Total</span>
+                    <span className="font-mono font-bold text-xl text-primary">
+                      {formatPrice(totalPrice)}
+                    </span>
+                  </div>
+                )}
               </div>
 
               {/* Midtrans Badge */}
@@ -532,10 +553,12 @@ export function BookingForm({ trip, onClose }: BookingFormProps) {
             </motion.div>
 
             <h3 className="font-serif font-bold text-2xl text-card-foreground mb-2">
-              Pembayaran Berhasil!
+              {currentBooking.status === 'dp_paid' ? 'Pembayaran DP Berhasil!' : 'Pembayaran Berhasil!'}
             </h3>
             <p className="text-muted-foreground mb-6">
-              Terima kasih telah melakukan booking di Airlangga Travel
+              {currentBooking.status === 'dp_paid'
+                ? 'Terima kasih telah membayar uang muka (DP) booking di Airlangga Travel'
+                : 'Terima kasih telah melakukan booking di Airlangga Travel'}
             </p>
 
             <div className="p-4 bg-secondary rounded-xl text-left space-y-3 mb-6">
@@ -557,12 +580,30 @@ export function BookingForm({ trip, onClose }: BookingFormProps) {
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Status</span>
-                <Badge className="bg-success text-success-foreground">Paid</Badge>
+                <Badge className={currentBooking.status === 'dp_paid' ? "bg-amber-500 text-white" : "bg-success text-success-foreground"}>
+                  {currentBooking.status === 'dp_paid' ? 'DP Paid' : 'Paid'}
+                </Badge>
               </div>
+              {currentBooking.status === 'dp_paid' && (
+                <>
+                  <div className="flex justify-between text-sm border-t border-border/50 pt-2">
+                    <span className="text-muted-foreground">Uang Muka Terbayar ({depositPercentage}%)</span>
+                    <span className="font-semibold text-card-foreground">
+                      {formatPrice(currentBooking.totalPrice * (depositPercentage / 100))}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Sisa Pelunasan</span>
+                    <span className="font-semibold text-card-foreground text-primary">
+                      {formatPrice(currentBooking.totalPrice * (1 - depositPercentage / 100))}
+                    </span>
+                  </div>
+                </>
+              )}
             </div>
 
             <p className="text-sm text-muted-foreground mb-6">
-              Detail booking telah dikirim ke email Anda. Tim kami akan menghubungi Anda 
+              Detail booking telah dikirim ke email Anda. Tim kami akan menghubungi Anda
               melalui WhatsApp untuk informasi lebih lanjut.
             </p>
 

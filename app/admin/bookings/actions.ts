@@ -5,7 +5,7 @@ import { revalidatePath } from 'next/cache'
 
 export async function updateBookingStatus(
   bookingId: string,
-  status: 'pending' | 'paid' | 'cancelled'
+  status: 'pending' | 'dp_paid' | 'paid' | 'cancelled'
 ) {
   if (!process.env.DATABASE_URL) {
     return { success: false, error: 'Database tidak terkoneksi (Mode Simulasi)' }

@@ -17,40 +17,25 @@ export function UnderConstruction({ type }: UnderConstructionProps) {
   // Content configurations based on type
   const config = {
     about: {
-      tag: 'Under Construction',
-      badgeColor: 'bg-primary/10 text-primary border-primary/20',
       title: 'Kami Sedang Merancang Petualangan Terbaik Anda',
       description: 'Halaman Tentang Kami sedang dalam tahap pengembangan untuk menyajikan cerita lengkap perjalanan kami, tim kami, dan visi kami dalam membawa Anda menjelajahi dunia.',
       primaryBtnText: 'Kembali ke Beranda',
       primaryBtnHref: '/',
-      secondaryBtnText: 'Hubungi WhatsApp',
-      secondaryBtnHref: 'https://wa.me/6208111211143?text=Halo%20Airlangga%20Travel,%20saya%20ingin%20tahu%20lebih%20banyak%20tentang%20layanan%20Anda.',
-      showWAIcon: true,
       illustration: 'compass',
     },
     contact: {
-      tag: 'Coming Soon',
-      badgeColor: 'bg-amber-500/10 text-amber-500 border-amber-500/20',
       title: 'Halaman Kontak Sedang Kami Persiapkan',
       description: 'Kami sedang membangun cara yang lebih mudah bagi Anda untuk terhubung. Untuk saat ini, Anda bisa langsung menghubungi kami via WhatsApp atau Email untuk merencanakan trip Anda.',
       primaryBtnText: 'Hubungi via WhatsApp',
       primaryBtnHref: 'https://wa.me/6208111211143?text=Halo%20Airlangga%20Travel,%20saya%20ingin%20berkonsultasi%20mengenai%20rencana%20trip.',
-      secondaryBtnText: 'Lihat Jadwal Open Trip',
-      secondaryBtnHref: '/open-trip',
-      showWAIcon: true,
       illustration: 'globe',
     },
     404: {
-      tag: '404 Not Found',
-      badgeColor: 'bg-destructive/10 text-destructive border-destructive/20',
       title: 'Kompas Anda Kehilangan Arah?',
       description: 'Halaman yang Anda cari tidak ditemukan atau mungkin sedang dalam masa rekonstruksi rute perjalanan baru kami.',
       primaryBtnText: 'Kembali ke Beranda',
       primaryBtnHref: '/',
-      secondaryBtnText: 'Lihat Jadwal Open Trip',
-      secondaryBtnHref: '/open-trip',
-      showWAIcon: false,
-      illustration: 'lost',
+      illustration: 'compass',
     },
   }[type]
 
@@ -62,7 +47,7 @@ export function UnderConstruction({ type }: UnderConstructionProps) {
       transition: {
         duration: 4 + custom,
         repeat: Infinity,
-        ease: 'easeInOut',
+        ease: 'easeInOut' as const,
       },
     }),
   }
@@ -111,7 +96,7 @@ export function UnderConstruction({ type }: UnderConstructionProps) {
 
       <div className="container mx-auto px-4 relative z-10">
         <div className="max-w-3xl mx-auto flex flex-col items-center text-center">
-          
+
           {/* Main Visual Illustration with Animation */}
           <div className="relative mb-8 flex justify-center items-center">
             {/* Glowing background ring */}
@@ -120,7 +105,7 @@ export function UnderConstruction({ type }: UnderConstructionProps) {
               transition={{ repeat: Infinity, duration: 3, ease: 'easeInOut' }}
               className="absolute w-36 h-36 md:w-44 md:h-44 rounded-full bg-primary/20 blur-xl"
             />
-            
+
             {/* Main Interactive Circle */}
             <div className="relative w-32 h-32 md:w-40 md:h-40 rounded-full bg-card border border-border shadow-xl flex items-center justify-center backdrop-blur-sm">
               {config.illustration === 'compass' && (
@@ -167,7 +152,7 @@ export function UnderConstruction({ type }: UnderConstructionProps) {
               )}
 
               {/* Little gear spin badge representing construction */}
-              {!is404 && (
+              {
                 <motion.div
                   animate={{ rotate: -360 }}
                   transition={{ repeat: Infinity, duration: 8, ease: 'linear' }}
@@ -175,20 +160,11 @@ export function UnderConstruction({ type }: UnderConstructionProps) {
                 >
                   <Wrench className="w-4 h-4 animate-pulse" />
                 </motion.div>
-              )}
+              }
             </div>
           </div>
 
-          {/* Badge Tag */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full border text-xs font-mono font-semibold uppercase tracking-wider mb-6 ${config.badgeColor}`}
-          >
-            <span className="w-1.5 h-1.5 rounded-full bg-current animate-ping" />
-            {config.tag}
-          </motion.div>
+
 
           {/* Title */}
           <motion.h1
@@ -239,32 +215,6 @@ export function UnderConstruction({ type }: UnderConstructionProps) {
                 <Link href={config.primaryBtnHref}>
                   <ArrowLeft className="mr-2 w-5 h-5" />
                   {config.primaryBtnText}
-                </Link>
-              </Button>
-            )}
-
-            {/* Secondary Button */}
-            {config.secondaryBtnHref.startsWith('http') ? (
-              <Button
-                asChild
-                size="lg"
-                variant="outline"
-                className="rounded-full px-8 h-12 text-base border-border hover:bg-accent/10 dark:hover:bg-input/20 w-full sm:w-auto"
-              >
-                <a href={config.secondaryBtnHref} target="_blank" rel="noopener noreferrer">
-                  {config.showWAIcon && <MessageCircle className="mr-2 w-5 h-5 text-primary" />}
-                  {config.secondaryBtnText}
-                </a>
-              </Button>
-            ) : (
-              <Button
-                asChild
-                size="lg"
-                variant="outline"
-                className="rounded-full px-8 h-12 text-base border-border hover:bg-accent/10 dark:hover:bg-input/20 w-full sm:w-auto"
-              >
-                <Link href={config.secondaryBtnHref}>
-                  {config.secondaryBtnText}
                 </Link>
               </Button>
             )}
