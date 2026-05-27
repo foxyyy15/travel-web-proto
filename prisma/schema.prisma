@@ -35,6 +35,8 @@ model Trip {
   category       String // "domestic" | "international"
   featured       Boolean             @default(false)
   depositPercentage Int                 @default(100) @map("deposit_percentage")
+  description    String?             @map("description")
+  terms          String?             @map("terms")
   createdAt      DateTime            @default(now()) @map("created_at")
   updatedAt      DateTime            @updatedAt @map("updated_at")
   images         TripImage[]
@@ -174,4 +176,16 @@ model Testimonial {
   trip       Trip?    @relation(fields: [tripId], references: [id], onDelete: SetNull)
 
   @@map("testimonials")
+}
+
+model GalleryItem {
+  id        String   @id @default(uuid())
+  title     String
+  location  String
+  image     String
+  category  String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("gallery_items")
 }

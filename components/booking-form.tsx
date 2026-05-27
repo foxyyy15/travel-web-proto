@@ -411,14 +411,11 @@ export function BookingForm({ trip, onClose }: BookingFormProps) {
                     id="participants"
                     type="number"
                     min={1}
-                    max={Math.min(10, trip.availableSlots)}
+                    max={10}
                     {...register('participants', { valueAsNumber: true })}
                     className="pl-10 h-12 rounded-xl"
                   />
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  Tersedia: {trip.availableSlots} slot
-                </p>
                 {errors.participants && (
                   <p className="text-sm text-destructive">{errors.participants.message}</p>
                 )}

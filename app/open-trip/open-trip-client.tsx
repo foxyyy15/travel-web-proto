@@ -85,11 +85,11 @@ export default function OpenTripClient({ trips }: OpenTripClientProps) {
             className="text-center max-w-2xl mx-auto"
           >
             <h1 className="font-serif font-bold text-4xl md:text-5xl text-foreground mb-4 text-balance">
-              Open Trip Schedule
+              Explore Our Open Trip Schedule
             </h1>
             <p className="text-muted-foreground leading-relaxed">
-              Temukan jadwal keberangkatan open trip terbaik. Bergabung dengan traveler lainnya
-              dan nikmati pengalaman liburan yang tak terlupakan!
+              A Budget-Friendly Way to Explore Your Dream Destinations!
+              A smart vacation solution for those looking to explore popular destinations, meet new friends, and save money. Various epic destinations await you here, check out the details below!
             </p>
           </motion.div>
         </div>
@@ -114,7 +114,7 @@ export default function OpenTripClient({ trips }: OpenTripClientProps) {
             {/* Filter Selects */}
             <div className="flex flex-wrap gap-3 w-full lg:w-auto">
               <Select value={selectedDestination} onValueChange={setSelectedDestination}>
-                <SelectTrigger className="w-full sm:w-40 h-12 rounded-full">
+                <SelectTrigger className="w-full sm:w-40 data-[size=default]:h-12 h-12 rounded-full">
                   <MapPin className="w-4 h-4 mr-2 text-primary" />
                   <SelectValue placeholder="Destinasi" />
                 </SelectTrigger>
@@ -128,7 +128,7 @@ export default function OpenTripClient({ trips }: OpenTripClientProps) {
               </Select>
 
               <Select value={selectedDuration} onValueChange={setSelectedDuration}>
-                <SelectTrigger className="w-full sm:w-36 h-12 rounded-full">
+                <SelectTrigger className="w-full sm:w-36 data-[size=default]:h-12 h-12 rounded-full">
                   <Clock className="w-4 h-4 mr-2 text-primary" />
                   <SelectValue placeholder="Durasi" />
                 </SelectTrigger>
@@ -142,7 +142,7 @@ export default function OpenTripClient({ trips }: OpenTripClientProps) {
               </Select>
 
               <Select value={selectedPriceRange} onValueChange={setSelectedPriceRange}>
-                <SelectTrigger className="w-full sm:w-40 h-12 rounded-full">
+                <SelectTrigger className="w-full sm:w-40 data-[size=default]:h-12 h-12 rounded-full">
                   <Calendar className="w-4 h-4 mr-2 text-primary" />
                   <SelectValue placeholder="Harga" />
                 </SelectTrigger>
@@ -182,13 +182,13 @@ export default function OpenTripClient({ trips }: OpenTripClientProps) {
           </p>
 
           {isLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {Array.from({ length: 8 }).map((_, i) => (
                 <TripCardSkeleton key={i} />
               ))}
             </div>
           ) : filteredTrips.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredTrips.map((trip, index) => (
                 <TripCard key={trip.id} trip={trip} index={index} />
               ))}

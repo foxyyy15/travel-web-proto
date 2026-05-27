@@ -24,7 +24,7 @@ export function TripCard({ trip, index = 0 }: TripCardProps) {
       style={{ animationDelay: `${index * 100}ms` }}
     >
       {/* Image */}
-      <div className="relative h-52 flex-shrink-0 overflow-hidden">
+      <div className="relative aspect-[3/4] flex-shrink-0 overflow-hidden">
         <Image
           src={trip.image}
           alt={trip.title}
@@ -38,11 +38,6 @@ export function TripCard({ trip, index = 0 }: TripCardProps) {
           <Badge className="bg-primary text-primary-foreground border-0">
             {trip.duration}
           </Badge>
-          {trip.availableSlots <= 5 && (
-            <Badge variant="destructive" className="border-0">
-              Sisa {trip.availableSlots} Slot
-            </Badge>
-          )}
         </div>
 
         {/* Location */}
@@ -65,10 +60,6 @@ export function TripCard({ trip, index = 0 }: TripCardProps) {
             <div className="flex items-center gap-1">
               <Clock className="w-4 h-4 text-primary" />
               <span>{trip.duration}</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <Users className="w-4 h-4 text-primary" />
-              <span>{trip.availableSlots}/{trip.totalSlots}</span>
             </div>
           </div>
 
@@ -102,7 +93,7 @@ export function TripCard({ trip, index = 0 }: TripCardProps) {
 export function TripCardSkeleton() {
   return (
     <div className="bg-card rounded-2xl overflow-hidden border border-border animate-pulse flex flex-col h-full">
-      <div className="h-52 bg-muted flex-shrink-0" />
+      <div className="aspect-[3/4] bg-muted flex-shrink-0" />
       <div className="p-5 flex flex-col flex-grow justify-between">
         <div>
           <div className="h-6 bg-muted rounded w-3/4" />

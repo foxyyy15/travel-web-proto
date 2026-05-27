@@ -43,6 +43,8 @@ export const trips: Trip[] = [
     excludes: ['Visa Schengen', 'Tips guide dan driver', 'Pengeluaran pribadi', 'Asuransi perjalanan'],
     category: 'international',
     featured: true,
+    description: 'Nikmati petualangan tak terlupakan menjelajahi keindahan arsitektur bersejarah dan budaya Eropa Timur yang mempesona. Perjalanan mencakup kota-kota ikonik seperti Prague dan Vienna dengan fasilitas premium dan pemandu profesional.',
+    terms: '1. Pendaftaran ditutup H-30 sebelum keberangkatan untuk pengurusan visa.\n2. Pembatalan oleh peserta setelah visa terbit akan dikenakan denda 100% biaya paket.\n3. Uang muka (DP) bersifat Non-Refundable kecuali pembatalan sepihak oleh pihak penyelenggara.\n4. Tiket penerbangan kelas ekonomi dan bagasi 20kg sudah termasuk.',
   },
   {
     id: '2',
@@ -91,6 +93,8 @@ export const trips: Trip[] = [
     excludes: ['Tiket pesawat/kereta', 'Tips guide dan driver', 'Pengeluaran pribadi'],
     category: 'domestic',
     featured: true,
+    description: 'Petualangan seru menyaksikan matahari terbit (sunrise) yang megah di Gunung Bromo dilanjutkan dengan petualangan budaya menelusuri keindahan candi bersejarah di Yogyakarta. Kombinasi petualangan alam dan budaya yang sempurna.',
+    terms: '1. Pelunasan biaya trip wajib diselesaikan maksimal H-7 sebelum keberangkatan.\n2. Pembatalan kurang dari H-3 sebelum keberangkatan dikenakan denda 100%.\n3. Peserta diharapkan dalam kondisi fisik yang sehat untuk menanjak di kawasan Bromo.\n4. Membawa pakaian hangat, jaket, dan sarung tangan.',
   },
   {
     id: '3',
@@ -132,6 +136,8 @@ export const trips: Trip[] = [
     excludes: ['Tiket pesawat/kereta', 'Tips guide dan driver', 'Pengeluaran pribadi'],
     category: 'domestic',
     featured: true,
+    description: 'Menyusuri dataran tinggi Dieng yang berjuluk Negeri di Atas Awan, menikmati keindahan Telaga Warna, Kawah Sikidang yang aktif, serta kehangatan budaya lokal di Yogyakarta. Destinasi alam pegunungan yang menyejukkan hati.',
+    terms: '1. Pembayaran DP minimal 20% dari total biaya paket.\n2. Pembatalan oleh peserta dapat dialihkan ke jadwal lain dengan konfirmasi maksimal H-14.\n3. Pihak travel berhak membatalkan perjalanan jika terjadi keadaan kahar (force majeure).\n4. Perlengkapan pribadi dan obat-obatan khusus harap dibawa masing-masing.',
   },
   {
     id: '4',
@@ -167,6 +173,8 @@ export const trips: Trip[] = [
     excludes: ['Tiket pesawat', 'Tips guide dan driver', 'Pengeluaran pribadi', 'Water sports'],
     category: 'domestic',
     featured: false,
+    description: 'Melarikan diri ke surga tropis Bali. Menjelajahi keasrian persawahan terasering Ubud, keagungan istana, dan menikmati keindahan sunset di tepi Pantai Kuta yang legendaris. Pengalaman liburan santai yang sangat berkesan.',
+    terms: '1. Harga berlaku untuk per pax dengan minimal keberangkatan sesuai kuota.\n2. Anak-anak di bawah 5 tahun mendapatkan potongan harga khusus.\n3. Protokol kesehatan dan kebersihan hotel bintang 4 wajib dipatuhi.\n4. Pengeluaran di luar program makan yang disediakan merupakan tanggung jawab pribadi.',
   },
   {
     id: '5',
@@ -192,6 +200,8 @@ export const trips: Trip[] = [
     excludes: ['Tiket pesawat', 'Diving equipment', 'Pengeluaran pribadi'],
     category: 'domestic',
     featured: false,
+    description: 'Menyelam di salah satu surga bawah laut terbaik di dunia. Gugusan karst Raja Ampat yang spektakuler dan keanekaragaman terumbu karang yang melimpah siap memanjakan para diver dan pencinta keindahan bahari Indonesia.',
+    terms: '1. Peserta wajib memiliki lisensi diving aktif untuk program diving.\n2. Wajib membawa kartu identitas diri yang berlaku (KTP/Paspor).\n3. Biaya konservasi Raja Ampat (PIN) sudah termasuk untuk turis domestik.\n4. Pembatalan sepihak oleh peserta H-14 dikenakan biaya hangus 50%.',
   },
 ]
 

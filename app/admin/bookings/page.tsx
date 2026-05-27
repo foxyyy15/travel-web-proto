@@ -62,7 +62,7 @@ const mockBookings = [
     participants: 2,
     createdAt: new Date(Date.now() - 3600000 * 24).toISOString(),
   },
-].filter(b => b.status !== 'pending')
+].filter(b => b.status === 'dp_paid' || b.status === 'paid')
 
 export default async function BookingsPage() {
   if (!process.env.DATABASE_URL) {
@@ -73,7 +73,7 @@ export default async function BookingsPage() {
     const dbBookings = await prisma.booking.findMany({
       where: {
         status: {
-          not: 'pending',
+          in: ['dp_paid', 'paid'],
         },
       },
       orderBy: { createdAt: 'desc' },

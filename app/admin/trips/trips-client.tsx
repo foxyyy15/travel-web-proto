@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useEffect } from 'react'
 import Image from 'next/image'
 import { motion } from 'framer-motion'
 import { toast } from 'sonner'
@@ -20,6 +20,8 @@ import {
   ListPlus,
   Info,
   Layers,
+  Loader2,
+  FileText,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -35,7 +37,6 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
-import { deleteTrip, createTrip, updateTrip } from './actions'
 import type { Trip, ItineraryDay } from '@/lib/types'
 
 interface TripsClientProps {
@@ -52,8 +53,8 @@ const emptyFormValues = {
   originalPrice: '' as string | number | undefined,
   image: '',
   images: [] as string[],
-  availableSlots: 10,
-  totalSlots: 10,
+  availableSlots: 999,
+  totalSlots: 999,
   departureDates: [] as string[],
   meetingPoint: '',
   itinerary: [] as ItineraryDay[],
@@ -62,13 +63,42 @@ const emptyFormValues = {
   category: 'domestic' as 'domestic' | 'international',
   featured: false,
   depositPercentage: 100,
+  description: '',
+  terms: '',
 }
 
 export default function TripsClient({ initialTrips, isMockData }: TripsClientProps) {
   const [trips, setTrips] = useState<Trip[]>(initialTrips)
+  const [isLoading, setIsLoading] = useState(initialTrips.length === 0)
   const [searchQuery, setSearchQuery] = useState('')
   const [isPending, startTransition] = useTransition()
   const [isSubmitPending, startSubmitTransition] = useTransition()
+
+  // Load data client-side to bypass Next.js Server Components serialization limits for Base64 image payload sizes
+  useEffect(() => {
+    async function loadTrips() {
+      if (isMockData) {
+        setIsLoading(false)
+        return
+      }
+      try {
+        const response = await fetch('/api/admin/trips')
+        const data = await response.json()
+        if (data.success) {
+          setTrips(data.trips)
+        } else {
+          toast.error(data.error || 'Gagal mengambil data trips dari API')
+        }
+      } catch (error) {
+        console.error('Failed to load trips:', error)
+        toast.error('Gagal memuat data unit trips dari server API')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadTrips()
+  }, [isMockData])
   
   // Modal states
   const [isFormOpen, setIsFormOpen] = useState(false)
@@ -133,6 +163,8 @@ export default function TripsClient({ initialTrips, isMockData }: TripsClientPro
       category: trip.category,
       featured: trip.featured || false,
       depositPercentage: trip.depositPercentage ?? 100,
+      description: trip.description || '',
+      terms: trip.terms || '',
     })
     setActiveTab('info')
     setIsFormOpen(true)
@@ -148,12 +180,20 @@ export default function TripsClient({ initialTrips, isMockData }: TripsClientPro
     }
 
     startTransition(async () => {
-      const res = await deleteTrip(id)
-      if (res.success) {
-        toast.success('Paket open trip berhasil dihapus!')
-        setTrips((prev) => prev.filter((t) => t.id !== id))
-      } else {
-        toast.error(res.error || 'Gagal menghapus open trip')
+      try {
+        const response = await fetch(`/api/admin/trips?id=${id}`, {
+          method: 'DELETE',
+        })
+        const res = await response.json()
+        if (res.success) {
+          toast.success('Paket open trip berhasil dihapus!')
+          setTrips((prev) => prev.filter((t) => t.id !== id))
+        } else {
+          toast.error(res.error || 'Gagal menghapus open trip')
+        }
+      } catch (error) {
+        console.error('Delete trip failed:', error)
+        toast.error('Gagal menghapus open trip')
       }
     })
   }
@@ -276,6 +316,69 @@ export default function TripsClient({ initialTrips, isMockData }: TripsClientPro
     })
   }
 
+  const handleImageFileChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    onUploadSuccess: (base64: string) => void
+  ) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (file.size > 1572864) {
+      toast.error('Ukuran file terlalu besar. Maksimal 1.5MB')
+      return
+    }
+
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      onUploadSuccess(reader.result as string)
+      toast.success('Gambar berhasil diproses secara lokal!')
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const handleMultipleImagesUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (!files || files.length === 0) return
+
+    const newImages: string[] = []
+    const errors: string[] = []
+    
+    const promises = Array.from(files).map((file) => {
+      return new Promise<void>((resolve) => {
+        if (file.size > 1572864) {
+          errors.push(`${file.name}: Ukuran file terlalu besar. Maksimal 1.5MB`)
+          resolve()
+          return
+        }
+
+        const reader = new FileReader()
+        reader.onloadend = () => {
+          newImages.push(reader.result as string)
+          resolve()
+        }
+        reader.onerror = () => {
+          errors.push(`${file.name}: Gagal membaca file`)
+          resolve()
+        }
+        reader.readAsDataURL(file)
+      })
+    })
+
+    Promise.all(promises).then(() => {
+      if (errors.length > 0) {
+        errors.forEach((err) => toast.error(err))
+      }
+      if (newImages.length > 0) {
+        setFormValues((prev) => ({
+          ...prev,
+          images: [...prev.images, ...newImages],
+        }))
+        toast.success(`${newImages.length} gambar berhasil ditambahkan secara lokal!`)
+      }
+      e.target.value = ''
+    })
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -320,6 +423,8 @@ export default function TripsClient({ initialTrips, isMockData }: TripsClientPro
       category: formValues.category,
       featured: formValues.featured,
       depositPercentage: Number(formValues.depositPercentage),
+      description: formValues.description,
+      terms: formValues.terms,
     }
 
     if (isMockData) {
@@ -338,27 +443,42 @@ export default function TripsClient({ initialTrips, isMockData }: TripsClientPro
     }
 
     startSubmitTransition(async () => {
-      if (editingTrip) {
-        const res = await updateTrip(editingTrip.id, submissionData)
-        if (res.success) {
-          toast.success('Paket open trip berhasil diperbarui!')
-          setTrips((prev) =>
-            prev.map((t) => (t.id === editingTrip.id ? { ...submissionData, id: editingTrip.id } as Trip : t))
-          )
-          setIsFormOpen(false)
+      try {
+        if (editingTrip) {
+          const response = await fetch('/api/admin/trips', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: editingTrip.id, ...submissionData }),
+          })
+          const res = await response.json()
+          if (res.success) {
+            toast.success('Paket open trip berhasil diperbarui!')
+            setTrips((prev) =>
+              prev.map((t) => (t.id === editingTrip.id ? { ...submissionData, id: editingTrip.id } as Trip : t))
+            )
+            setIsFormOpen(false)
+          } else {
+            toast.error(res.error || 'Gagal memperbarui paket open trip')
+          }
         } else {
-          toast.error(res.error || 'Gagal memperbarui paket open trip')
+          const response = await fetch('/api/admin/trips', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(submissionData),
+          })
+          const res = await response.json()
+          if (res.success) {
+            toast.success('Paket open trip baru berhasil dibuat!')
+            const newId = res.data?.id || crypto.randomUUID()
+            setTrips((prev) => [{ ...submissionData, id: newId } as Trip, ...prev])
+            setIsFormOpen(false)
+          } else {
+            toast.error(res.error || 'Gagal membuat paket open trip baru')
+          }
         }
-      } else {
-        const res = await createTrip(submissionData)
-        if (res.success) {
-          toast.success('Paket open trip baru berhasil dibuat!')
-          const newId = (res as any).data?.id || crypto.randomUUID()
-          setTrips((prev) => [{ ...submissionData, id: newId } as Trip, ...prev])
-          setIsFormOpen(false)
-        } else {
-          toast.error(res.error || 'Gagal membuat paket open trip baru')
-        }
+      } catch (error) {
+        console.error('Submit trip failed:', error)
+        toast.error('Gagal memproses data paket open trip')
       }
     })
   }
@@ -405,7 +525,12 @@ export default function TripsClient({ initialTrips, isMockData }: TripsClientPro
 
       {/* Trips Cards/Table */}
       <div className="bg-card border border-border rounded-2xl shadow-sm overflow-hidden">
-        {filteredTrips.length > 0 ? (
+        {isLoading ? (
+          <div className="text-center py-20 flex flex-col items-center justify-center">
+            <Loader2 className="w-10 h-10 animate-spin text-primary mb-4" />
+            <p className="text-sm text-muted-foreground">Memuat data unit trip...</p>
+          </div>
+        ) : filteredTrips.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full text-sm text-left">
               <thead className="bg-secondary/40 text-muted-foreground text-xs uppercase font-medium">
@@ -414,7 +539,6 @@ export default function TripsClient({ initialTrips, isMockData }: TripsClientPro
                   <th className="px-6 py-4">Destinasi</th>
                   <th className="px-6 py-4">Durasi</th>
                   <th className="px-6 py-4">Kategori</th>
-                  <th className="px-6 py-4">Sisa Slot</th>
                   <th className="px-6 py-4">Harga / Pax</th>
                   <th className="px-6 py-4 text-center">Aksi</th>
                 </tr>
@@ -461,12 +585,6 @@ export default function TripsClient({ initialTrips, isMockData }: TripsClientPro
                       <Badge variant="secondary" className="capitalize text-xs font-normal">
                         {t.category}
                       </Badge>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="flex items-center gap-1 text-xs font-semibold text-foreground">
-                        <Users className="w-3.5 h-3.5 text-primary shrink-0" />
-                        {t.availableSlots} / {t.totalSlots}
-                      </span>
                     </td>
                     <td className="px-6 py-4">
                       <div>
@@ -573,6 +691,13 @@ export default function TripsClient({ initialTrips, isMockData }: TripsClientPro
                 >
                   <ListPlus className="w-4 h-4" />
                   Itinerary
+                </TabsTrigger>
+                <TabsTrigger
+                  value="rules"
+                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-1 pb-3 pt-2 font-semibold text-sm transition-all flex items-center gap-1.5 cursor-pointer"
+                >
+                  <FileText className="w-4 h-4" />
+                  Deskripsi & S&K
                 </TabsTrigger>
               </TabsList>
 
@@ -692,39 +817,15 @@ export default function TripsClient({ initialTrips, isMockData }: TripsClientPro
 
               {/* Tab 2: Tanggal & Slot */}
               <TabsContent value="dates" className="py-4 space-y-4 outline-none">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="space-y-1.5 md:col-span-2">
-                    <Label htmlFor="meetingPoint">Titik Kumpul (Meeting Point) *</Label>
-                    <Input
-                      id="meetingPoint"
-                      value={formValues.meetingPoint}
-                      onChange={(e) => setFormValues((prev) => ({ ...prev, meetingPoint: e.target.value }))}
-                      placeholder="Contoh: Bandara Komodo Labuan Bajo"
-                      required
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="space-y-1.5">
-                      <Label htmlFor="availableSlots">Sisa Slot *</Label>
-                      <Input
-                        id="availableSlots"
-                        type="number"
-                        value={formValues.availableSlots}
-                        onChange={(e) => setFormValues((prev) => ({ ...prev, availableSlots: Number(e.target.value) }))}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="totalSlots">Total Slot *</Label>
-                      <Input
-                        id="totalSlots"
-                        type="number"
-                        value={formValues.totalSlots}
-                        onChange={(e) => setFormValues((prev) => ({ ...prev, totalSlots: Number(e.target.value) }))}
-                        required
-                      />
-                    </div>
-                  </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="meetingPoint">Titik Kumpul (Meeting Point) *</Label>
+                  <Input
+                    id="meetingPoint"
+                    value={formValues.meetingPoint}
+                    onChange={(e) => setFormValues((prev) => ({ ...prev, meetingPoint: e.target.value }))}
+                    placeholder="Contoh: Bandara Komodo Labuan Bajo"
+                    required
+                  />
                 </div>
 
                 {/* Departure Dates List */}
@@ -774,36 +875,63 @@ export default function TripsClient({ initialTrips, isMockData }: TripsClientPro
               </TabsContent>
 
               {/* Tab 3: Media Galeri */}
-              <TabsContent value="media" className="py-4 space-y-4 outline-none">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
-                  <div className="md:col-span-2 space-y-1.5">
-                    <Label htmlFor="image">URL Gambar Utama *</Label>
-                    <Input
-                      id="image"
-                      value={formValues.image}
-                      onChange={(e) => setFormValues((prev) => ({ ...prev, image: e.target.value }))}
-                      placeholder="Masukkan URL foto dari Unsplash atau penyimpanan lain"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label>Pratinjau Gambar Utama</Label>
-                    {formValues.image ? (
-                      <div className="relative w-full h-24 rounded-lg overflow-hidden border border-border mt-1.5 bg-secondary">
-                        <img
-                          src={formValues.image}
-                          alt="Main Preview"
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            ;(e.target as HTMLImageElement).src = 'https://placehold.co/600x400?text=Gambar+Rusak'
-                          }}
+              <TabsContent value="media" className="py-4 space-y-5 outline-none">
+                {/* Main Cover Image Uploader */}
+                <div className="space-y-2">
+                  <Label>Unggah Gambar Sampul Utama *</Label>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
+                    <div className="md:col-span-2 space-y-3">
+                      {/* Upload Box */}
+                      <div className="relative group flex flex-col items-center justify-center border-2 border-dashed border-border hover:border-primary/50 transition-all rounded-xl p-4 bg-secondary/10 cursor-pointer h-40">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => handleImageFileChange(e, (base64) => setFormValues((prev) => ({ ...prev, image: base64 })))}
+                          className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                        />
+                        {formValues.image ? (
+                          <div className="relative w-full h-full flex items-center justify-center">
+                            <img
+                              src={formValues.image}
+                              alt="Cover Preview"
+                              className="h-full w-auto object-contain rounded-lg max-h-32"
+                            />
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center rounded-lg">
+                              <span className="text-white text-xs font-semibold px-3 py-1 bg-black/60 rounded-full">Ganti Gambar</span>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="text-center space-y-2">
+                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mx-auto text-primary">
+                              <Plus className="w-5 h-5" />
+                            </div>
+                            <div className="text-xs font-medium text-foreground">Klik untuk unggah gambar sampul</div>
+                            <div className="text-[10px] text-muted-foreground">PNG, JPG, JPEG (Maksimal 1.5MB)</div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Fallback URL Input */}
+                      <div className="space-y-1">
+                        <Label htmlFor="image" className="text-[11px] text-muted-foreground">Atau masukkan URL gambar utama secara manual</Label>
+                        <Input
+                          id="image"
+                          value={formValues.image}
+                          onChange={(e) => setFormValues((prev) => ({ ...prev, image: e.target.value }))}
+                          placeholder="Masukkan URL foto dari Unsplash..."
+                          className="h-10 text-xs"
                         />
                       </div>
-                    ) : (
-                      <div className="w-full h-24 rounded-lg border border-dashed border-border mt-1.5 flex items-center justify-center text-xs text-muted-foreground">
-                        Belum ada gambar
+                    </div>
+
+                    <div className="hidden md:block">
+                      <Label>Panduan Ukuran</Label>
+                      <div className="p-4 bg-secondary/20 border border-border rounded-xl mt-2 text-xs text-muted-foreground space-y-2 leading-relaxed">
+                        <p><strong>Rasio Foto:</strong> Menggunakan rasio portrait 3:4 agar pas di kartu.</p>
+                        <p><strong>Kompresi:</strong> Harap gunakan gambar yang sudah dikompres agar pemuatan halaman tetap cepat.</p>
+                        <p><strong>Maksimal File:</strong> 1.5MB per berkas gambar.</p>
                       </div>
-                    )}
+                    </div>
                   </div>
                 </div>
 
@@ -811,32 +939,63 @@ export default function TripsClient({ initialTrips, isMockData }: TripsClientPro
                 <div className="space-y-2 border border-border p-4 rounded-xl">
                   <div className="flex justify-between items-center pb-2 border-b border-border">
                     <Label className="font-semibold text-base">Galeri Foto Tambahan</Label>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      onClick={handleAddGalleryImage}
-                      className="h-8 flex items-center gap-1"
-                    >
-                      <Plus className="w-3.5 h-3.5" />
-                      Tambah Foto
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <div className="relative">
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          className="h-8 flex items-center gap-1 cursor-pointer bg-primary/10 text-primary hover:bg-primary/20 border-primary/20"
+                        >
+                          <ImageIcon className="w-3.5 h-3.5" />
+                          Unggah Sekaligus (Bisa Banyak)
+                        </Button>
+                        <input
+                          type="file"
+                          multiple
+                          accept="image/*"
+                          onChange={handleMultipleImagesUpload}
+                          className="absolute inset-0 opacity-0 cursor-pointer"
+                        />
+                      </div>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={handleAddGalleryImage}
+                        className="h-8 flex items-center gap-1"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        Tambah Baris URL
+                      </Button>
+                    </div>
                   </div>
 
                   {formValues.images.length > 0 ? (
                     <div className="space-y-3 pt-2">
                       {formValues.images.map((url, idx) => (
-                        <div key={idx} className="flex gap-4 items-start">
-                          <div className="flex-1 space-y-1">
+                        <div key={idx} className="flex gap-4 items-center">
+                          <div className="flex-1 relative">
                             <Input
                               value={url}
                               onChange={(e) => handleGalleryImageChange(idx, e.target.value)}
-                              placeholder="Masukkan URL foto tambahan..."
+                              placeholder="Masukkan URL foto atau klik ikon di kanan untuk unggah file..."
                               required
+                              className="pr-10"
                             />
+                            {/* Inline file uploader trigger */}
+                            <div className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground hover:text-primary transition-colors cursor-pointer flex items-center justify-center">
+                              <ImageIcon className="w-4 h-4" />
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => handleImageFileChange(e, (base64) => handleGalleryImageChange(idx, base64))}
+                                className="absolute inset-0 opacity-0 cursor-pointer"
+                              />
+                            </div>
                           </div>
                           {url && (
-                            <div className="relative w-20 h-10 rounded-lg overflow-hidden border border-border bg-secondary shrink-0">
+                            <div className="relative w-16 h-10 rounded-lg overflow-hidden border border-border bg-secondary shrink-0">
                               <img
                                 src={url}
                                 alt="Gallery Preview"
@@ -852,7 +1011,7 @@ export default function TripsClient({ initialTrips, isMockData }: TripsClientPro
                             size="icon"
                             variant="ghost"
                             onClick={() => handleRemoveGalleryImage(idx)}
-                            className="text-destructive hover:bg-destructive/10 shrink-0 mt-0.5"
+                            className="text-destructive hover:bg-destructive/10 shrink-0"
                           >
                             <Trash2 className="w-4 h-4" />
                           </Button>
@@ -1090,6 +1249,32 @@ export default function TripsClient({ initialTrips, isMockData }: TripsClientPro
                     </p>
                   </div>
                 )}
+              </TabsContent>
+
+              {/* Tab 6: Deskripsi & S&K */}
+              <TabsContent value="rules" className="py-4 space-y-4 outline-none">
+                <div className="space-y-4">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="description">Deskripsi Paket Perjalanan</Label>
+                    <Textarea
+                      id="description"
+                      value={formValues.description}
+                      onChange={(e) => setFormValues((prev) => ({ ...prev, description: e.target.value }))}
+                      placeholder="Masukkan deskripsi perjalanan secara lengkap, seperti daya tarik utama paket wisata ini..."
+                      rows={6}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="terms">Syarat & Ketentuan Pemesanan</Label>
+                    <Textarea
+                      id="terms"
+                      value={formValues.terms}
+                      onChange={(e) => setFormValues((prev) => ({ ...prev, terms: e.target.value }))}
+                      placeholder="Masukkan syarat dan ketentuan perjalanan (contoh: kebijakan pembatalan, minimal peserta, perlengkapan yang wajib dibawa, dll.). Gunakan enter/baris baru untuk merapikan list poin."
+                      rows={8}
+                    />
+                  </div>
+                </div>
               </TabsContent>
             </Tabs>
 
