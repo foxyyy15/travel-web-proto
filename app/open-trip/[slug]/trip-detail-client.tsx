@@ -95,14 +95,6 @@ export default function TripDetailPageClient({ trip }: TripDetailPageClientProps
                     className="object-cover"
                     priority
                   />
-                  {trip.availableSlots <= 5 && (
-                    <Badge
-                      variant="destructive"
-                      className="absolute top-4 left-4 border-0"
-                    >
-                      Sisa {trip.availableSlots} Slot
-                    </Badge>
-                  )}
                 </motion.div>
 
                 {images.length > 1 && (
@@ -144,10 +136,6 @@ export default function TripDetailPageClient({ trip }: TripDetailPageClientProps
                     <Clock className="w-5 h-5 text-primary" />
                     <span>{trip.duration}</span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Users className="w-5 h-5 text-primary" />
-                    <span>{trip.availableSlots}/{trip.totalSlots} Slot</span>
-                  </div>
                 </div>
 
                 {/* Meeting Point */}
@@ -174,6 +162,18 @@ export default function TripDetailPageClient({ trip }: TripDetailPageClientProps
                     ))}
                   </div>
                 </div>
+
+                {/* Description */}
+                {trip.description && (
+                  <div className="pt-6 border-t border-border/60">
+                    <h3 className="font-serif font-semibold text-xl text-foreground mb-3">
+                      Deskripsi Paket Perjalanan
+                    </h3>
+                    <p className="text-muted-foreground text-sm leading-relaxed whitespace-pre-line text-balance">
+                      {trip.description}
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* Itinerary */}
@@ -282,6 +282,18 @@ export default function TripDetailPageClient({ trip }: TripDetailPageClientProps
                   </ul>
                 </div>
               </div>
+
+              {/* Terms and Conditions */}
+              {trip.terms && (
+                <div className="p-6 bg-secondary/30 border border-border rounded-xl">
+                  <h3 className="font-serif font-semibold text-xl text-foreground mb-4">
+                    Syarat & Ketentuan Pemesanan
+                  </h3>
+                  <p className="text-muted-foreground text-sm leading-relaxed whitespace-pre-line text-balance">
+                    {trip.terms}
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Right Column - Booking Form */}

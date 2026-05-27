@@ -65,7 +65,9 @@ export default function BookingsClient({ initialBookings, isMockData }: Bookings
     if (isMockData) {
       toast.warning('Mode Simulasi: Perubahan status hanya disimpan di memori sementara')
       setBookings((prev) =>
-        prev.map((b) => (b.id === bookingId ? { ...b, status: newStatus } : b))
+        newStatus === 'cancelled'
+          ? prev.filter((b) => b.id !== bookingId)
+          : prev.map((b) => (b.id === bookingId ? { ...b, status: newStatus } : b))
       )
       return
     }
@@ -73,9 +75,11 @@ export default function BookingsClient({ initialBookings, isMockData }: Bookings
     startTransition(async () => {
       const result = await updateBookingStatus(bookingId, newStatus)
       if (result.success) {
-        toast.success(`Status pemesanan berhasil diubah menjadi ${newStatus === 'dp_paid' ? 'DP Terbayar' : newStatus === 'paid' ? 'Lunas' : newStatus}`)
+        toast.success(newStatus === 'cancelled' ? 'Pemesanan berhasil dibatalkan' : `Status pemesanan berhasil diubah menjadi ${newStatus === 'dp_paid' ? 'DP Terbayar' : newStatus === 'paid' ? 'Lunas' : newStatus}`)
         setBookings((prev) =>
-          prev.map((b) => (b.id === bookingId ? { ...b, status: newStatus } : b))
+          newStatus === 'cancelled'
+            ? prev.filter((b) => b.id !== bookingId)
+            : prev.map((b) => (b.id === bookingId ? { ...b, status: newStatus } : b))
         )
       } else {
         toast.error(result.error || 'Gagal mengubah status pemesanan')
@@ -133,8 +137,6 @@ export default function BookingsClient({ initialBookings, isMockData }: Bookings
               <SelectItem value="all">Semua Status</SelectItem>
               <SelectItem value="dp_paid">DP Terbayar</SelectItem>
               <SelectItem value="paid">Lunas (Paid)</SelectItem>
-              <SelectItem value="pending">Pending</SelectItem>
-              <SelectItem value="cancelled">Batal</SelectItem>
             </SelectContent>
           </Select>
 

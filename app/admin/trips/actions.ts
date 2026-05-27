@@ -120,7 +120,7 @@ export async function createTrip(tripData: Omit<Trip, 'id'>) {
     revalidatePath('/admin')
     revalidatePath('/admin/trips')
     
-    return { success: true, data: newTrip }
+    return { success: true, data: { id: newTrip.id } }
   } catch (error) {
     console.error('Failed to create trip:', error)
     return { success: false, error: 'Gagal membuat paket open trip baru' }

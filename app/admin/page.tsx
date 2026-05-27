@@ -21,6 +21,8 @@ interface DashboardStats {
   activeTrips: number
   pendingTestimonials: number
   isMockData: boolean
+  dpBookingsCount: number
+  paidBookingsCount: number
 }
 
 // Fetch helper with fallback to mock statistics if database connection fails
@@ -31,11 +33,13 @@ async function getDashboardData(): Promise<{
   if (!process.env.DATABASE_URL) {
     return {
       stats: {
-        totalRevenue: 28500000,
-        totalBookings: 8,
+        totalRevenue: 25000000,
+        totalBookings: 2,
         activeTrips: 5,
         pendingTestimonials: 2,
         isMockData: true,
+        dpBookingsCount: 1,
+        paidBookingsCount: 1,
       },
       recentBookings: [
         {
@@ -59,20 +63,8 @@ async function getDashboardData(): Promise<{
           bookingType: 'car',
           departureDate: '2026-05-28',
           totalPrice: 1600000,
-          status: 'pending',
+          status: 'dp_paid',
           createdAt: new Date(Date.now() - 3600000 * 5).toISOString(),
-        },
-        {
-          id: 'mock-3',
-          bookingCode: 'TRP-100295',
-          customerName: 'Dewi Lestari',
-          email: 'dewi@example.com',
-          whatsapp: '082211445566',
-          bookingType: 'trip',
-          departureDate: '2026-07-05',
-          totalPrice: 4500000,
-          status: 'cancelled',
-          createdAt: new Date(Date.now() - 3600000 * 24).toISOString(),
         },
       ],
     }
@@ -81,6 +73,11 @@ async function getDashboardData(): Promise<{
   try {
     const [bookings, tripsCount, pendingTestimonialsCount] = await Promise.all([
       prisma.booking.findMany({
+        where: {
+          status: {
+            in: ['dp_paid', 'paid'],
+          },
+        },
         orderBy: { createdAt: 'desc' },
       }),
       prisma.trip.count(),
@@ -90,6 +87,7 @@ async function getDashboardData(): Promise<{
     ])
 
     const paidBookings = bookings.filter((b) => b.status === 'paid')
+    const dpBookings = bookings.filter((b) => b.status === 'dp_paid')
     const totalRevenue = paidBookings.reduce((sum, b) => sum + b.totalPrice, 0)
 
     const recentBookings = bookings.slice(0, 5).map((b) => ({
@@ -112,6 +110,8 @@ async function getDashboardData(): Promise<{
         activeTrips: tripsCount,
         pendingTestimonials: pendingTestimonialsCount,
         isMockData: false,
+        dpBookingsCount: dpBookings.length,
+        paidBookingsCount: paidBookings.length,
       },
       recentBookings,
     }
@@ -119,11 +119,13 @@ async function getDashboardData(): Promise<{
     console.warn('Dashboard DB load failed, fallback to mock data:', error)
     return {
       stats: {
-        totalRevenue: 28500000,
-        totalBookings: 8,
+        totalRevenue: 26600000,
+        totalBookings: 2,
         activeTrips: 5,
         pendingTestimonials: 2,
         isMockData: true,
+        dpBookingsCount: 1,
+        paidBookingsCount: 1,
       },
       recentBookings: [
         {
@@ -147,20 +149,8 @@ async function getDashboardData(): Promise<{
           bookingType: 'car',
           departureDate: '2026-05-28',
           totalPrice: 1600000,
-          status: 'pending',
+          status: 'dp_paid',
           createdAt: new Date(Date.now() - 3600000 * 5).toISOString(),
-        },
-        {
-          id: 'mock-3',
-          bookingCode: 'TRP-100295',
-          customerName: 'Dewi Lestari',
-          email: 'dewi@example.com',
-          whatsapp: '082211445566',
-          bookingType: 'trip',
-          departureDate: '2026-07-05',
-          totalPrice: 4500000,
-          status: 'cancelled',
-          createdAt: new Date(Date.now() - 3600000 * 24).toISOString(),
         },
       ],
     }
@@ -235,7 +225,7 @@ export default async function AdminDashboardPage() {
               {stats.totalBookings}
             </h3>
             <span className="text-[10px] text-muted-foreground">
-              Menunggu konfirmasi: {recentBookings.filter((b) => b.status === 'pending').length}
+              Lunas: {stats.paidBookingsCount} | DP Terbayar: {stats.dpBookingsCount}
             </span>
           </div>
           <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
@@ -352,12 +342,14 @@ export default async function AdminDashboardPage() {
                         className={
                           b.status === 'paid'
                             ? 'bg-success text-success-foreground hover:bg-success'
-                            : b.status === 'pending'
+                            : b.status === 'dp_paid'
                             ? 'bg-amber-500 text-white hover:bg-amber-500'
+                            : b.status === 'pending'
+                            ? 'bg-zinc-500 text-white hover:bg-zinc-500'
                             : 'bg-destructive text-destructive-foreground hover:bg-destructive'
                         }
                       >
-                        {b.status === 'paid' ? 'Lunas' : b.status === 'pending' ? 'Pending' : 'Batal'}
+                        {b.status === 'paid' ? 'Lunas' : b.status === 'dp_paid' ? 'DP Terbayar' : b.status === 'pending' ? 'Pending' : 'Batal'}
                       </Badge>
                     </td>
                   </tr>

@@ -11,6 +11,7 @@ import {
   Settings,
   LogOut,
   User as UserIcon,
+  Image as ImageIcon,
 } from 'lucide-react'
 import { SignOutButton } from '@/components/admin/sign-out-button'
 
@@ -33,6 +34,7 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
     { href: '/admin/trips', label: 'Open Trips', icon: CalendarDays },
     { href: '/admin/cars', label: 'Daftar Armada', icon: Car },
     { href: '/admin/testimonials', label: 'Testimoni', icon: MessageSquareQuote },
+    { href: '/admin/gallery', label: 'Kelola Galeri', icon: ImageIcon },
     { href: '/admin/settings', label: 'Pengaturan', icon: Settings },
   ]
 

@@ -18,6 +18,8 @@ export interface Trip {
   category: 'domestic' | 'international'
   featured?: boolean
   depositPercentage?: number
+  description?: string
+  terms?: string
 }
 
 export interface ItineraryDay {
@@ -69,4 +71,13 @@ export interface PrivateTripRequest {
   duration: number
   facilities: string[]
   estimatedPrice: number
+}
+
+export interface GalleryItem {
+  id: string
+  title: string
+  location: string
+  image: string
+  category: string
+  createdAt?: string
 }
