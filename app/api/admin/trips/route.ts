@@ -54,6 +54,7 @@ export async function GET() {
       depositPercentage: t.depositPercentage,
       description: (t as any).description ?? undefined,
       terms: (t as any).terms ?? undefined,
+      transportation: (t as any).transportation ?? 'Darat',
     }))
 
     return NextResponse.json({ success: true, trips })
@@ -92,6 +93,7 @@ export async function POST(req: Request) {
       depositPercentage = 100,
       description,
       terms,
+      transportation,
     } = tripData
 
     // Check if slug is unique
@@ -120,6 +122,7 @@ export async function POST(req: Request) {
         depositPercentage: Number(depositPercentage),
         description,
         terms,
+        transportation: transportation || 'Darat',
         images: {
           create: images.map((imageUrl: string, index: number) => ({
             imageUrl,
@@ -201,6 +204,7 @@ export async function PUT(req: Request) {
       depositPercentage = 100,
       description,
       terms,
+      transportation,
     } = tripData
 
     // Check if slug is unique (excluding this trip)
@@ -238,6 +242,7 @@ export async function PUT(req: Request) {
           depositPercentage: Number(depositPercentage),
           description,
           terms,
+          transportation: transportation || 'Darat',
           images: {
             create: images.map((imageUrl: string, index: number) => ({
               imageUrl,

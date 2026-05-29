@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
-import { Search, Filter, Calendar, MapPin, Clock } from 'lucide-react'
+import { Search, Filter, Calendar, MapPin, Clock, Compass } from 'lucide-react'
 import { Navbar } from '@/components/navbar'
 import { Footer } from '@/components/footer'
 import { WhatsAppButton } from '@/components/whatsapp-button'
@@ -18,10 +18,14 @@ import {
 } from '@/components/ui/select'
 import type { Trip } from '@/lib/types'
 
-const destinations = ['All', 'East Europe', 'Bromo', 'Yogyakarta', 'Bali', 'Raja Ampat', 'Dieng']
-const durations = ['All', '3 Hari', '4 Hari', '5 Hari', '6+ Hari']
+const categories = [
+  { value: 'All', label: 'Kategori' },
+  { value: 'domestic', label: 'Domestik' },
+  { value: 'international', label: 'Internasional' },
+]
+const durations = ['Durasi', '3 Hari', '4 Hari', '5 Hari', '6+ Hari']
 const priceRanges = [
-  { label: 'All', min: 0, max: Infinity },
+  { label: 'Harga', min: 0, max: Infinity },
   { label: 'Under 3 Juta', min: 0, max: 3000000 },
   { label: '3 - 5 Juta', min: 3000000, max: 5000000 },
   { label: '5 - 10 Juta', min: 5000000, max: 10000000 },
@@ -34,9 +38,9 @@ interface OpenTripClientProps {
 
 export default function OpenTripClient({ trips }: OpenTripClientProps) {
   const [searchQuery, setSearchQuery] = useState('')
-  const [selectedDestination, setSelectedDestination] = useState('All')
-  const [selectedDuration, setSelectedDuration] = useState('All')
-  const [selectedPriceRange, setSelectedPriceRange] = useState('All')
+  const [selectedCategory, setSelectedCategory] = useState('All')
+  const [selectedDuration, setSelectedDuration] = useState('Durasi')
+  const [selectedPriceRange, setSelectedPriceRange] = useState('Harga')
   const [isLoading] = useState(false)
 
   const filteredTrips = useMemo(() => {
@@ -46,13 +50,13 @@ export default function OpenTripClient({ trips }: OpenTripClientProps) {
         return false
       }
 
-      // Destination filter
-      if (selectedDestination !== 'All' && !trip.destination.toLowerCase().includes(selectedDestination.toLowerCase())) {
+      // Category filter
+      if (selectedCategory !== 'All' && trip.category !== selectedCategory) {
         return false
       }
 
       // Duration filter
-      if (selectedDuration !== 'All') {
+      if (selectedDuration !== 'Durasi') {
         const days = parseInt(trip.duration.split(' ')[0])
         if (selectedDuration === '3 Hari' && days !== 3) return false
         if (selectedDuration === '4 Hari' && days !== 4) return false
@@ -61,7 +65,7 @@ export default function OpenTripClient({ trips }: OpenTripClientProps) {
       }
 
       // Price filter
-      if (selectedPriceRange !== 'All') {
+      if (selectedPriceRange !== 'Harga') {
         const range = priceRanges.find((r) => r.label === selectedPriceRange)
         if (range && (trip.price < range.min || trip.price > range.max)) {
           return false
@@ -70,7 +74,7 @@ export default function OpenTripClient({ trips }: OpenTripClientProps) {
 
       return true
     })
-  }, [trips, searchQuery, selectedDestination, selectedDuration, selectedPriceRange])
+  }, [trips, searchQuery, selectedCategory, selectedDuration, selectedPriceRange])
 
   return (
     <main className="min-h-screen bg-background">
@@ -113,15 +117,15 @@ export default function OpenTripClient({ trips }: OpenTripClientProps) {
 
             {/* Filter Selects */}
             <div className="flex flex-wrap gap-3 w-full lg:w-auto">
-              <Select value={selectedDestination} onValueChange={setSelectedDestination}>
-                <SelectTrigger className="w-full sm:w-40 data-[size=default]:h-12 h-12 rounded-full">
-                  <MapPin className="w-4 h-4 mr-2 text-primary" />
-                  <SelectValue placeholder="Destinasi" />
+              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                <SelectTrigger className="w-full sm:w-44 data-[size=default]:h-12 h-12 rounded-full">
+                  <Compass className="w-4 h-4 mr-2 text-primary" />
+                  <SelectValue placeholder="Kategori" />
                 </SelectTrigger>
                 <SelectContent>
-                  {destinations.map((dest) => (
-                    <SelectItem key={dest} value={dest}>
-                      {dest}
+                  {categories.map((cat) => (
+                    <SelectItem key={cat.value} value={cat.value}>
+                      {cat.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -159,7 +163,7 @@ export default function OpenTripClient({ trips }: OpenTripClientProps) {
                 variant="outline"
                 onClick={() => {
                   setSearchQuery('')
-                  setSelectedDestination('All')
+                  setSelectedCategory('All')
                   setSelectedDuration('All')
                   setSelectedPriceRange('All')
                 }}

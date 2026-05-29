@@ -1,10 +1,10 @@
 import { Navbar } from '@/components/navbar'
 import { Footer } from '@/components/footer'
 import { WhatsAppButton } from '@/components/whatsapp-button'
-import { UnderConstruction } from '@/components/under-construction'
+import ContactClient from './contact-client'
 
 export const metadata = {
-  title: 'Contact Us - Airlangga Travel',
+  title: 'Hubungi Kami - Airlangga Travel',
   description: 'Hubungi Airlangga Travel untuk konsultasi perjalanan, pemesanan tiket open trip, private trip, atau sewa mobil.',
 }
 
@@ -15,7 +15,7 @@ export default function ContactPage() {
         <Navbar />
         {/* Padding top is applied to offset the fixed navbar */}
         <div className="pt-20">
-          <UnderConstruction type="contact" />
+          <ContactClient />
         </div>
       </div>
       <Footer />

@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { Clock, Users, MapPin } from 'lucide-react'
+import { Clock, Users, MapPin, Plane, Ship, Bus } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import type { Trip } from '@/lib/types'
@@ -17,6 +17,36 @@ export function TripCard({ trip, index = 0 }: TripCardProps) {
   const formatPrice = (price: number) => {
     return `Rp${price.toLocaleString('id-ID')}`
   }
+
+  const getTransportation = (transportation?: string, includes: string[] = []) => {
+    const val = transportation || ''
+    if (val) {
+      if (val.toLowerCase().includes('pesawat')) {
+        return { label: 'Pesawat', icon: 'Plane' }
+      }
+      if (val.toLowerCase().includes('kapal')) {
+        return { label: 'Kapal Laut', icon: 'Ship' }
+      }
+      return { label: val, icon: 'Bus' }
+    }
+
+    const inclStr = (includes || []).join(' ').toLowerCase()
+    if (inclStr.includes('pesawat') || inclStr.includes('flight') || inclStr.includes('penerbangan')) {
+      return { label: 'Pesawat', icon: 'Plane' }
+    }
+    if (
+      inclStr.includes('kapal') ||
+      inclStr.includes('phinisi') ||
+      inclStr.includes('ferry') ||
+      inclStr.includes('boat') ||
+      inclStr.includes('laut')
+    ) {
+      return { label: 'Kapal Laut', icon: 'Ship' }
+    }
+    return { label: 'Darat', icon: 'Bus' }
+  }
+
+  const trans = getTransportation(trip.transportation, trip.includes)
 
   return (
     <div
@@ -60,6 +90,12 @@ export function TripCard({ trip, index = 0 }: TripCardProps) {
             <div className="flex items-center gap-1">
               <Clock className="w-4 h-4 text-primary" />
               <span>{trip.duration}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              {trans.icon === 'Plane' && <Plane className="w-4 h-4 text-primary" />}
+              {trans.icon === 'Ship' && <Ship className="w-4 h-4 text-primary" />}
+              {trans.icon === 'Bus' && <Bus className="w-4 h-4 text-primary" />}
+              <span>{trans.label}</span>
             </div>
           </div>
 

@@ -18,6 +18,9 @@ import {
   ChevronDown,
   X,
   Maximize2,
+  Plane,
+  Ship,
+  Bus,
 } from 'lucide-react'
 import { Navbar } from '@/components/navbar'
 import { Footer } from '@/components/footer'
@@ -46,6 +49,36 @@ export default function TripDetailPageClient({ trip }: TripDetailPageClientProps
       minimumFractionDigits: 0,
     }).format(price)
   }
+
+  const getTransportation = (transportation?: string, includes: string[] = []) => {
+    const val = transportation || ''
+    if (val) {
+      if (val.toLowerCase().includes('pesawat')) {
+        return { label: 'Pesawat', icon: 'Plane' }
+      }
+      if (val.toLowerCase().includes('kapal')) {
+        return { label: 'Kapal Laut', icon: 'Ship' }
+      }
+      return { label: val, icon: 'Bus' }
+    }
+
+    const inclStr = (includes || []).join(' ').toLowerCase()
+    if (inclStr.includes('pesawat') || inclStr.includes('flight') || inclStr.includes('penerbangan')) {
+      return { label: 'Pesawat', icon: 'Plane' }
+    }
+    if (
+      inclStr.includes('kapal') ||
+      inclStr.includes('phinisi') ||
+      inclStr.includes('ferry') ||
+      inclStr.includes('boat') ||
+      inclStr.includes('laut')
+    ) {
+      return { label: 'Kapal Laut', icon: 'Ship' }
+    }
+    return { label: 'Darat', icon: 'Bus' }
+  }
+
+  const trans = getTransportation(trip.transportation, trip.includes)
 
   // Keyboard navigation for fullscreen lightbox
   useEffect(() => {
@@ -169,6 +202,12 @@ export default function TripDetailPageClient({ trip }: TripDetailPageClientProps
                   <div className="flex items-center gap-2">
                     <Clock className="w-5 h-5 text-primary" />
                     <span>{trip.duration}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {trans.icon === 'Plane' && <Plane className="w-5 h-5 text-primary" />}
+                    {trans.icon === 'Ship' && <Ship className="w-5 h-5 text-primary" />}
+                    {trans.icon === 'Bus' && <Bus className="w-5 h-5 text-primary" />}
+                    <span>{trans.label}</span>
                   </div>
                 </div>
 

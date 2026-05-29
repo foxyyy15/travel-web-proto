@@ -27,20 +27,11 @@ const quickLinks = [
   { href: '/about', label: 'About Us' },
 ]
 
-const destinations = [
-  'East Europe',
-  'Bromo',
-  'Yogyakarta',
-  'Bali',
-  'Raja Ampat',
-  'Dieng',
-]
-
 export function Footer() {
   return (
     <footer className="bg-foreground text-background">
       <div className="container mx-auto px-4 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
           {/* Brand */}
           <div className="space-y-4">
             <Link href="/" className="inline-block">
@@ -102,22 +93,7 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* Destinations */}
-          <div>
-            <h4 className="font-serif font-semibold text-lg mb-4">Destinations</h4>
-            <ul className="space-y-3">
-              {destinations.map((dest) => (
-                <li key={dest}>
-                  <Link
-                    href="/open-trip"
-                    className="text-background/70 hover:text-primary transition-colors text-sm"
-                  >
-                    {dest}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
+
 
           {/* Contact */}
           <div>
@@ -125,18 +101,18 @@ export function Footer() {
             <ul className="space-y-4">
               <li>
                 <a
-                  href="https://wa.me/6208111211143"
+                  href="https://wa.me/6282122258373"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-3 text-background/70 hover:text-primary transition-colors text-sm"
                 >
                   <Phone className="w-4 h-4 text-primary" />
-                  08111211143
+                  082122258373
                 </a>
               </li>
               <li>
                 <a
-                  href="https://wa.me/62081218091668"
+                  href="https://wa.me/6281218091668"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-3 text-background/70 hover:text-primary transition-colors text-sm"
@@ -154,9 +130,14 @@ export function Footer() {
                   info@travleairlangga.com
                 </a>
               </li>
-              <li className="flex items-start gap-3 text-background/70 text-sm">
-                <MapPin className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-                <span>Jakarta, Indonesia</span>
+              <li>
+                <a
+                  href="https://maps.app.goo.gl/qpAYsxNQuSCzYtYy5"
+                  className="flex items-start gap-3 text-background/70 hover:text-primary transition-colors text-sm"
+                >
+                  <MapPin className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                  <span>Serang, Indonesia</span>
+                </a>
               </li>
             </ul>
           </div>

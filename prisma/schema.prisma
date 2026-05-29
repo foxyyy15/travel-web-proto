@@ -37,6 +37,7 @@ model Trip {
   depositPercentage Int                 @default(100) @map("deposit_percentage")
   description    String?             @map("description")
   terms          String?             @map("terms")
+  transportation String?             @default("Darat")
   createdAt      DateTime            @default(now()) @map("created_at")
   updatedAt      DateTime            @updatedAt @map("updated_at")
   images         TripImage[]

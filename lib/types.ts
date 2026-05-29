@@ -20,6 +20,7 @@ export interface Trip {
   depositPercentage?: number
   description?: string
   terms?: string
+  transportation?: string
 }
 
 export interface ItineraryDay {

@@ -50,6 +50,7 @@ export async function getTrips(): Promise<Trip[]> {
       depositPercentage: (t as any).depositPercentage ?? 100,
       description: (t as any).description ?? undefined,
       terms: (t as any).terms ?? undefined,
+      transportation: (t as any).transportation ?? 'Darat',
     }))
   } catch (error) {
     console.warn('Prisma getTrips failed, falling back to static data:', error)
@@ -107,6 +108,7 @@ export async function getTripBySlug(slug: string): Promise<Trip | null> {
       depositPercentage: (t as any).depositPercentage ?? 100,
       description: t.description ?? undefined,
       terms: t.terms ?? undefined,
+      transportation: (t as any).transportation ?? 'Darat',
     }
   } catch (error) {
     console.warn(`Prisma getTripBySlug(${slug}) failed, falling back to static data:`, error)

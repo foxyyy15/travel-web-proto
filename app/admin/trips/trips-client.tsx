@@ -65,6 +65,7 @@ const emptyFormValues = {
   depositPercentage: 100,
   description: '',
   terms: '',
+  transportation: 'Darat',
 }
 
 export default function TripsClient({ initialTrips, isMockData }: TripsClientProps) {
@@ -165,6 +166,7 @@ export default function TripsClient({ initialTrips, isMockData }: TripsClientPro
       depositPercentage: trip.depositPercentage ?? 100,
       description: trip.description || '',
       terms: trip.terms || '',
+      transportation: trip.transportation || 'Darat',
     })
     setActiveTab('info')
     setIsFormOpen(true)
@@ -425,6 +427,7 @@ export default function TripsClient({ initialTrips, isMockData }: TripsClientPro
       depositPercentage: Number(formValues.depositPercentage),
       description: formValues.description,
       terms: formValues.terms,
+      transportation: formValues.transportation || 'Darat',
     }
 
     if (isMockData) {
@@ -726,7 +729,7 @@ export default function TripsClient({ initialTrips, isMockData }: TripsClientPro
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                   <div className="space-y-1.5">
                     <Label htmlFor="destination">Destinasi *</Label>
                     <Input
@@ -758,6 +761,16 @@ export default function TripsClient({ initialTrips, isMockData }: TripsClientPro
                       <option value="domestic">Domestik</option>
                       <option value="international">Internasional</option>
                     </select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="transportation">Moda Transportasi *</Label>
+                    <Input
+                      id="transportation"
+                      value={formValues.transportation}
+                      onChange={(e) => setFormValues((prev) => ({ ...prev, transportation: e.target.value }))}
+                      placeholder="Contoh: Darat, Pesawat, Kapal Laut, Kereta Api, dll."
+                      required
+                    />
                   </div>
                 </div>
 
