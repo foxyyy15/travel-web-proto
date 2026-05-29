@@ -8,6 +8,7 @@ import {
   Database,
   ArrowRight,
   TrendingUp,
+  Car,
 } from 'lucide-react'
 import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
@@ -23,6 +24,7 @@ interface DashboardStats {
   isMockData: boolean
   dpBookingsCount: number
   paidBookingsCount: number
+  totalCars: number
 }
 
 // Fetch helper with fallback to mock statistics if database connection fails
@@ -40,6 +42,7 @@ async function getDashboardData(): Promise<{
         isMockData: true,
         dpBookingsCount: 1,
         paidBookingsCount: 1,
+        totalCars: 4,
       },
       recentBookings: [
         {
@@ -71,7 +74,7 @@ async function getDashboardData(): Promise<{
   }
 
   try {
-    const [bookings, tripsCount, pendingTestimonialsCount] = await Promise.all([
+    const [bookings, tripsCount, pendingTestimonialsCount, carsCount] = await Promise.all([
       prisma.booking.findMany({
         where: {
           status: {
@@ -84,6 +87,7 @@ async function getDashboardData(): Promise<{
       prisma.testimonial.count({
         where: { isApproved: false },
       }),
+      prisma.car.count(),
     ])
 
     const paidBookings = bookings.filter((b) => b.status === 'paid')
@@ -112,6 +116,7 @@ async function getDashboardData(): Promise<{
         isMockData: false,
         dpBookingsCount: dpBookings.length,
         paidBookingsCount: paidBookings.length,
+        totalCars: carsCount,
       },
       recentBookings,
     }
@@ -126,6 +131,7 @@ async function getDashboardData(): Promise<{
         isMockData: true,
         dpBookingsCount: 1,
         paidBookingsCount: 1,
+        totalCars: 4,
       },
       recentBookings: [
         {
@@ -195,7 +201,7 @@ export default async function AdminDashboardPage() {
       </div>
 
       {/* Stats Widgets */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5">
         {/* Revenue Card */}
         <div className="bg-card border border-border p-5 rounded-2xl flex items-center justify-between shadow-sm">
           <div className="space-y-1">
@@ -248,6 +254,24 @@ export default async function AdminDashboardPage() {
           </div>
           <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
             <Compass className="w-6 h-6" />
+          </div>
+        </div>
+
+        {/* Cars Card */}
+        <div className="bg-card border border-border p-5 rounded-2xl flex items-center justify-between shadow-sm">
+          <div className="space-y-1">
+            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">
+              Armada Rental
+            </p>
+            <h3 className="font-mono text-2xl font-bold text-foreground">
+              {stats.totalCars}
+            </h3>
+            <span className="text-[10px] text-muted-foreground">
+              Mobil aktif disewakan
+            </span>
+          </div>
+          <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+            <Car className="w-6 h-6" />
           </div>
         </div>
 

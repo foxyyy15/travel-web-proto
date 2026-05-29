@@ -4,8 +4,14 @@ import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 import type { GalleryItem } from '@/lib/types'
 import { randomUUID } from 'crypto'
+import { auth } from '@/auth'
 
 export async function deleteGalleryItem(id: string) {
+  const session = await auth()
+  if (!session?.user) {
+    return { success: false, error: 'Unauthorized' }
+  }
+
   if (!process.env.DATABASE_URL) {
     return { success: false, error: 'Database tidak terkoneksi (Mode Simulasi)' }
   }
@@ -25,6 +31,11 @@ export async function deleteGalleryItem(id: string) {
 }
 
 export async function createGalleryItem(data: Omit<GalleryItem, 'id'>) {
+  const session = await auth()
+  if (!session?.user) {
+    return { success: false, error: 'Unauthorized' }
+  }
+
   if (!process.env.DATABASE_URL) {
     return { success: false, error: 'Database tidak terkoneksi (Mode Simulasi)' }
   }
@@ -51,6 +62,11 @@ export async function createGalleryItem(data: Omit<GalleryItem, 'id'>) {
 }
 
 export async function updateGalleryItem(id: string, data: Omit<GalleryItem, 'id'>) {
+  const session = await auth()
+  if (!session?.user) {
+    return { success: false, error: 'Unauthorized' }
+  }
+
   if (!process.env.DATABASE_URL) {
     return { success: false, error: 'Database tidak terkoneksi (Mode Simulasi)' }
   }

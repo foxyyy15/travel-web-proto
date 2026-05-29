@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -8,6 +8,7 @@ import { format } from 'date-fns'
 import { id } from 'date-fns/locale'
 import {
   ChevronLeft,
+  ChevronRight,
   MapPin,
   Clock,
   Users,
@@ -15,6 +16,8 @@ import {
   CheckCircle,
   XCircle,
   ChevronDown,
+  X,
+  Maximize2,
 } from 'lucide-react'
 import { Navbar } from '@/components/navbar'
 import { Footer } from '@/components/footer'
@@ -31,6 +34,8 @@ interface TripDetailPageClientProps {
 export default function TripDetailPageClient({ trip }: TripDetailPageClientProps) {
   const [selectedImage, setSelectedImage] = useState(0)
   const [openItinerary, setOpenItinerary] = useState<number | null>(0)
+  const [isFullscreenOpen, setIsFullscreenOpen] = useState(false)
+  const [fullscreenImageIndex, setFullscreenImageIndex] = useState(0)
 
   const images = trip.images && trip.images.length > 0 ? trip.images : [trip.image]
 
@@ -41,6 +46,24 @@ export default function TripDetailPageClient({ trip }: TripDetailPageClientProps
       minimumFractionDigits: 0,
     }).format(price)
   }
+
+  // Keyboard navigation for fullscreen lightbox
+  useEffect(() => {
+    if (!isFullscreenOpen) return
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsFullscreenOpen(false)
+      } else if (e.key === 'ArrowLeft' && images.length > 1) {
+        setFullscreenImageIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1))
+      } else if (e.key === 'ArrowRight' && images.length > 1) {
+        setFullscreenImageIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1))
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isFullscreenOpen, images.length])
 
   return (
     <main className="min-h-screen bg-background">
@@ -86,15 +109,26 @@ export default function TripDetailPageClient({ trip }: TripDetailPageClientProps
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="relative aspect-video rounded-2xl overflow-hidden"
+                  onClick={() => {
+                    setFullscreenImageIndex(selectedImage)
+                    setIsFullscreenOpen(true)
+                  }}
+                  className="relative aspect-video rounded-2xl overflow-hidden cursor-pointer group"
                 >
                   <Image
                     src={images[selectedImage]}
                     alt={trip.title}
                     fill
-                    className="object-cover"
+                    className="object-cover group-hover:scale-[1.02] transition-transform duration-500"
                     priority
                   />
+                  {/* Zoom Hover Overlay */}
+                  <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                    <div className="bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20 flex items-center gap-2 text-white text-sm font-medium">
+                      <Maximize2 className="w-4 h-4" />
+                      Perbesar Gambar
+                    </div>
+                  </div>
                 </motion.div>
 
                 {images.length > 1 && (
@@ -320,6 +354,76 @@ export default function TripDetailPageClient({ trip }: TripDetailPageClientProps
           </div>
         </div>
       </section>
+
+      {/* Fullscreen Image Lightbox Overlay */}
+      <AnimatePresence>
+        {isFullscreenOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-black/95 backdrop-blur-md flex flex-col items-center justify-center select-none"
+            onClick={() => setIsFullscreenOpen(false)}
+          >
+            {/* Close Button */}
+            <button
+              onClick={() => setIsFullscreenOpen(false)}
+              className="absolute top-4 right-4 z-50 w-12 h-12 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20 transition-all cursor-pointer"
+            >
+              <X className="w-6 h-6" />
+            </button>
+
+            {/* Main Lightbox Image Container */}
+            <div
+              className="relative w-full max-w-[94vw] h-[86vh] flex items-center justify-center"
+              onClick={(e) => e.stopPropagation()} // Prevent modal from closing when clicking inside
+            >
+              <div className="relative w-full h-full">
+                <Image
+                  src={images[fullscreenImageIndex]}
+                  alt={`${trip.title} Fullscreen`}
+                  fill
+                  className="object-contain"
+                  priority
+                />
+              </div>
+
+              {/* Navigation Left */}
+              {images.length > 1 && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setFullscreenImageIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1))
+                  }}
+                  className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-black/40 text-white border border-white/10 flex items-center justify-center hover:bg-black/60 transition-all cursor-pointer shadow-md"
+                >
+                  <ChevronLeft className="w-6 h-6" />
+                </button>
+              )}
+
+              {/* Navigation Right */}
+              {images.length > 1 && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setFullscreenImageIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1))
+                  }}
+                  className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-black/40 text-white border border-white/10 flex items-center justify-center hover:bg-black/60 transition-all cursor-pointer shadow-md"
+                >
+                  <ChevronRight className="w-6 h-6" />
+                </button>
+              )}
+            </div>
+
+            {/* Pagination Counter */}
+            {images.length > 1 && (
+              <div className="text-white/60 text-sm mt-4 font-mono">
+                {fullscreenImageIndex + 1} / {images.length}
+              </div>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <Footer />
       <WhatsAppButton message={`Halo, saya tertarik dengan trip ${trip.title}`} />

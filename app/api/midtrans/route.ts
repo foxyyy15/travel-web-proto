@@ -35,6 +35,23 @@ export async function POST(request: Request) {
       )
     }
 
+    // Validate that the booking exists in the database before creating a payment
+    if (process.env.DATABASE_URL) {
+      try {
+        const booking = await prisma.booking.findUnique({
+          where: { bookingCode: orderId },
+        })
+        if (!booking) {
+          return NextResponse.json(
+            { error: 'Booking not found' },
+            { status: 404 }
+          )
+        }
+      } catch (dbError) {
+        console.error('Error validating booking:', dbError)
+      }
+    }
+
     // Create unique order ID for Midtrans to avoid duplicate order ID errors (allows payment re-attempts)
     const uniqueOrderId = `${orderId}-${Date.now()}`
 

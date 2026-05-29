@@ -13,16 +13,22 @@ async function main() {
   })
 
   if (!existingAdmin) {
-    const passwordHash = await bcrypt.hash('admin123', 10)
-    await prisma.adminUser.create({
-      data: {
-        username: 'Administrator',
-        email: adminEmail,
-        passwordHash,
-        role: 'admin',
-      },
-    })
-    console.log('Admin user created: admin@airlanggatravel.com / admin123')
+    const adminPassword = process.env.ADMIN_SEED_PASSWORD
+    if (!adminPassword) {
+      console.warn('⚠️  ADMIN_SEED_PASSWORD env var not set. Skipping admin user creation.')
+      console.warn('   Set ADMIN_SEED_PASSWORD in your .env file and re-run seed.')
+    } else {
+      const passwordHash = await bcrypt.hash(adminPassword, 12)
+      await prisma.adminUser.create({
+        data: {
+          username: 'Administrator',
+          email: adminEmail,
+          passwordHash,
+          role: 'admin',
+        },
+      })
+      console.log('✅ Admin user created with email:', adminEmail)
+    }
   } else {
     console.log('Admin user already exists.')
   }

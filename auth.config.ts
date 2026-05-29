@@ -20,5 +20,5 @@ export const authConfig = {
   pages: {
     signIn: '/admin/login',
   },
-  secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET || 'secret123',
+  secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET,
 } satisfies NextAuthConfig

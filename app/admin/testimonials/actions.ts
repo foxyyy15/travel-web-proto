@@ -2,8 +2,14 @@
 
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
+import { auth } from '@/auth'
 
 export async function approveTestimonial(id: string) {
+  const session = await auth()
+  if (!session?.user) {
+    return { success: false, error: 'Unauthorized' }
+  }
+
   if (!process.env.DATABASE_URL) {
     return { success: false, error: 'Database tidak terkoneksi (Mode Simulasi)' }
   }
@@ -25,6 +31,11 @@ export async function approveTestimonial(id: string) {
 }
 
 export async function deleteTestimonial(id: string) {
+  const session = await auth()
+  if (!session?.user) {
+    return { success: false, error: 'Unauthorized' }
+  }
+
   if (!process.env.DATABASE_URL) {
     return { success: false, error: 'Database tidak terkoneksi (Mode Simulasi)' }
   }
